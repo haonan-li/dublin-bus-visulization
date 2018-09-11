@@ -4,9 +4,9 @@ Group project for GEOM90007\_2018\_SM2: Spatial Visualisation
 
 ## Prerequisites
 
-[processing3] (https://processing.org/download/)
+[processing3](https://processing.org/download/)
 
-[Dublin-bus] (https://data.dublinked.ie/dataset/dublin-bus-gps-sample-data-from-dublin-city-council-insight-project/) dataset, downlaod and put it into dublin\_data directory
+[Dublin-bus](https://data.dublinked.ie/dataset/dublin-bus-gps-sample-data-from-dublin-city-council-insight-project/) dataset, downlaod and put it into dublin\_data directory
 
 ## Install
 
@@ -30,9 +30,9 @@ Then, run processing\_src.pde with processing
 
 ## Authors
 
-* **Haonan Li** [haonan-li] (https://github.com/haonan-li)
-* **Wenyi Zhao** [PeggyZWY] (https://github.com/PeggyZWY)
-* **Sisi Liu** []
+* **Haonan Li** [haonan-li](https://github.com/haonan-li)
+* **Wenyi Zhao** [PeggyZWY](https://github.com/PeggyZWY)
+* **Sisi Liu** 
 * **Xiao Ding**
 
 
