@@ -21,7 +21,7 @@ pip install pandas
 First run data preprocessing
 
 ```
-cd src\
+cd src/
 python data.py
 ```
 
@@ -30,8 +30,8 @@ Then, run processing\_src.pde with processing
 
 ## Authors
 
-* **Haonan Li** [haonan-li](https://github.com/haonan-li)
-* **Wenyi Zhao** [PeggyZWY](https://github.com/PeggyZWY)
+* **[Haonan Li](https://github.com/haonan-li)**
+* **[Wenyi Zhao](https://github.com/PeggyZWY)**
 * **Sisi Liu** 
 * **Xiao Ding**
 
