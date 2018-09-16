@@ -41,7 +41,7 @@ void draw()
 void readData()
 {
   // Read the GPS data and background map.
-  String[] geoCoords = loadStrings("../dublin_data/congestion.csv");
+  String[] geoCoords = loadStrings("../dublin_data/congestion/siri.20130102.csv");
 
   // backgroundMap = loadImage("background.png");
    
