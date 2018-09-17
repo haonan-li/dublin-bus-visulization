@@ -16,16 +16,35 @@ pandas
 pip install pandas
 ```
 
+## Data prepare
+
+create a data directory on the root, put all data into the `dublin_data` directory
+
+```
+mkdir dublin_data
+```
+
 ## Running 
 
-First run data preprocessing
+First unzip all gz files
+
+```
+cd dublin_data/
+chmod +x unzip.sh
+./unzip.sh
+```
+
+Then run data preprocessing
 
 ```
 cd src/
 python data.py
 ```
 
-Then, run processing\_src.pde with processing
+You can choose to run a part of data processing through disable and enable the source code in `main` funtion in [data.py](https://github.com/haonan-li/dublin-bus-visulization/blob/master/src/data.py)
+
+
+Finally, run processing\_src.pde with processing
 
 
 ## Authors
