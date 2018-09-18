@@ -18,15 +18,11 @@ pip install pandas
 
 ## Data prepare
 
-create a data directory on the root, put all data into the `dublin_data` directory
-
-```
-mkdir dublin_data
-```
+Put all data into the [dublin\_data](https://drive.google.com/file/d/1H6GdnppX5Emd2sT8Eid4iEVe2lrLV-o6/view?usp=sharing) directory
 
 ## Running 
 
-First unzip all gz files
+First unzip all gz files (Optional)
 
 ```
 cd dublin_data/
@@ -51,8 +47,8 @@ Finally, run processing\_src.pde with processing
 
 * **[Haonan Li](https://github.com/haonan-li)**
 * **[Wenyi Zhao](https://github.com/PeggyZWY)**
-* **Sisi Liu** 
-* **Xiao Ding**
+* **[Sisi Liu](https://github.com/thinine)** 
+* **[Xiao Ding](https://github.com/NeoDing)**
 
 
 

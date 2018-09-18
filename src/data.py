@@ -49,13 +49,13 @@ def stops(data_file):
 
 def route(data_file):
     df = pd.read_csv(data_dir + data_file, header=None, names=header)
-    cols = ['Timestamp','Line_ID','Lon','Lat']
+    cols = ['Timestamp','Line_ID','Lon','Lat','Vehicle_ID']
     ndf = keep_cols(df,cols)
     nndf = ndf[~ndf.Line_ID.isnull()]
-    line_ids = set(nndf['Line_ID'].values)
+    vehicle_ids = set(nndf['Vehicle_ID'].values)
     ldf = []
-    for line_id in line_ids:
-        sndf = ndf[ndf.Line_ID == line_id]
+    for vehicle_id in vehicle_ids:
+        sndf = ndf[ndf.Vehicle_ID == vehicle_id]
         lsndf = sndf.copy()
         sndf.drop(sndf.index[-1],inplace=True)
         lsndf.drop(lsndf.index[0],inplace=True)
