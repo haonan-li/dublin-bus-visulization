@@ -9,7 +9,7 @@ final color MAXCOL=color(10, 10, 255);
  
 void setup()
 {
-  size(1000,600);
+  size(1200,754);
   background(202, 226, 245);
   fill(1);
   noLoop();
@@ -18,8 +18,8 @@ void setup()
  
 void draw()
 {
-  // Background map.
-  //image(backgroundMap,0,0,width,height);
+  //Background map.
+  image(backgroundMap,0,0,width,height);
   
   // Projected GPS coordinates
   noFill();
@@ -30,7 +30,7 @@ void draw()
   int i=0;
   for (PVector coord : coords)
   { 
-
+    
     PVector scrCoord = geoToScreen(coord);
     vertex(scrCoord.x,scrCoord.y);  
   }
@@ -43,11 +43,12 @@ void readData()
   // Read the GPS data and background map.
   String[] geoCoords = loadStrings("../dublin_data/congestion/siri.20130102.csv");
 
-  // backgroundMap = loadImage("background.png");
-   
+  //Read basemap img.
+  backgroundMap = loadImage("../mapdata/map.png");
+  
   WebMercator proj = new WebMercator();
    
-  // Convert the GPS coordinates from lat/long to WebMercator
+  // Convert the GPS coordinates from lat/long to WGS_84
   coords = new ArrayList<PVector>();  
   for (String line: geoCoords)
   {
@@ -56,16 +57,15 @@ void readData()
     float lat = float(geoCoord[2]);
     coords.add(proj.transformCoords(new PVector(lng,lat)));
   } 
-
    
-  // Store the WebMercator coordinates of the corner of the map.
-  // The lat/long of the corners was provided by OpenStreetMap
+  // Store the WGS 84 coordinates of the corner of the map.
+  // The lat/long of the corners was provided by ArcGIS
   // when exporting the map tile.
-  tlCorner = proj.transformCoords(new PVector(-6.00,53.00));
-  brCorner = proj.transformCoords(new PVector(-6.70,53.70));
+  tlCorner = proj.transformCoords(new PVector(-6.6488,53.4852));
+  brCorner = proj.transformCoords(new PVector(-6.0061,53.2192));
 }
  
-// Convert from WebMercator coordinates to screen coordinates.
+// Convert from WGS 84 coordinates to screen coordinates.
 PVector geoToScreen(PVector geo)
 {
   return new PVector(map(geo.x,tlCorner.x,brCorner.x,0,width),
