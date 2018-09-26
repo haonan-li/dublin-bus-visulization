@@ -40,12 +40,15 @@ def congestion(data_file):
     nndf = keep_rows(ndf,'Congestion',larger,1)
     output(nndf,'congestion/',data_file)
 
-# Extract all stops
-def stops(data_file):
-    df = pd.read_csv(data_dir + data_file, header=None, names=header)
-    cols = ['Lon','Lat','At_Stop']
-    ndf = keep_cols(df,cols)
-    nndf = keep_rows(ndf,'At_Stop',larger,1)
+# Count stops for each bus line
+def line_stop_summary(files):
+    ldf = list()
+    for data_file in files:
+        df = pd.read_csv(data_dir + data_file, header=None, names=header)
+        cols = ['Lon','Lat','At_Stop', 'LineID']
+        ndf = keep_cols(df,cols)
+        nndf = keep_rows(ndf,'At_Stop',larger,1)
+        ldf.append(nndf)
     output(nndf,'stop/',data_file)
 
 # Extract line's route
@@ -55,7 +58,7 @@ def route(data_file):
     ndf = keep_cols(df,cols)
     nndf = ndf[~ndf.Line_ID.isnull()]
     line_ids = set(nndf['Line_ID'].values)
-    ldf = []
+    ldf = list()
     line = dict()
 
     for line_id in line_ids:
@@ -81,8 +84,8 @@ def route(data_file):
     odf = pd.concat(ldf)
     output(odf,'route/',data_file)
 
-# Generate a json file contains all line_ids of all files
-def line2json(files):
+# Generate a json file contains all line_ids for all days
+def bus_line_summary(files):
     lines = dict()
     for data_file in files:
         df = pd.read_csv(data_dir + data_file, header=None, names=header)
@@ -96,11 +99,13 @@ def main():
     files = os.listdir(data_dir)
     files = [item for item in files if (item[:4]=='siri')]
 
-    line2json(files)
+    # Count each day's bus lineID
+    bus_line_summary(files)
+    # Count the stops for each bus line
+    line_stop_summary(files)
 
     for item in files:
         route(item)
-        # stops(item)
         # congestion(item)
 
 
