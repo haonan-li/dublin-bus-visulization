@@ -42,14 +42,30 @@ def congestion(data_file):
 
 # Count stops for each bus line
 def line_stop_summary(files):
+    # Concat all files to a big dataframe
     ldf = list()
     for data_file in files:
         df = pd.read_csv(data_dir + data_file, header=None, names=header)
-        cols = ['Lon','Lat','At_Stop', 'LineID']
+        cols = ['Lon','Lat','At_Stop', 'Line_ID']
         ndf = keep_cols(df,cols)
         nndf = keep_rows(ndf,'At_Stop',larger,1)
         ldf.append(nndf)
-    output(nndf,'stop/',data_file)
+    odf = pd.concat(ldf)
+    lines = set(odf['Line_ID'].values)
+    # For all lines
+    ldf = list()
+    for line in lines:
+        # Grab one line's data
+        ndf = odf[odf['Line_ID']==line]
+        # Group all stops and count the duplicated stops
+        # (If one position have more duplicates, it is more likely to be a exact stop)
+        cndf = ndf.groupby(ndf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
+        # Sort by count and keep top 500 stops
+        scndf = cndf.sort_values(by=['count'],ascending=False)[0:500]
+        ldf.append(scndf)
+    odf = pd.concat(ldf)
+    output(odf,'stop/','stops.csv')
+
 
 # Extract line's route
 def route(data_file):
@@ -96,6 +112,7 @@ def bus_line_summary(files):
         f.write(json.dumps(lines, indent=4))
 
 def main():
+    # Raw data files
     files = os.listdir(data_dir)
     files = [item for item in files if (item[:4]=='siri')]
 
@@ -104,9 +121,11 @@ def main():
     # Count the stops for each bus line
     line_stop_summary(files)
 
-    for item in files:
-        route(item)
-        # congestion(item)
+    # for item in files:
+    #     # Everyday's congestion may different, so process separately
+    #     congestion(item)
+    #     # Everyday's bus line may different, so process separately
+    #     route(item)
 
 
 if __name__ == '__main__':
