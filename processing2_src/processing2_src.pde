@@ -2,6 +2,7 @@
  * Displays the subway lines of dublin.
  * 
  * For colleborators: see API at http://unfoldingmaps.org/javadoc/index.html
+ * Unfolding Tutorial: http://unfoldingmaps.org/tutorials/getting-started-in-processing.html
  */
 
 import de.fhpotsdam.unfolding.*;
@@ -16,7 +17,7 @@ import java.text.*;
 
 import controlP5.*; 
 
-Location dublinLocation = new Location(53.3f, -6.33f);
+Location dublinLocation = new Location(53.33f, -6.25f);
 
 // Control panel
 ControlP5 cp5;
