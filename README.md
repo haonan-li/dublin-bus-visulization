@@ -11,17 +11,17 @@ Group project for GEOM90007\_2018\_SM2: Spatial Visualisation
 
 ## Install
 
-pandas
+pandas, progressbar2
 
 ```
-pip install pandas
+pip install pandas progressbar2
 ```
 
 ## Data prepare
 
-Create a data directory names `dublin_data`.
+Create a data directory names `data/raw`.
 
-Download [Dublin-bus](https://drive.google.com/file/d/1H6GdnppX5Emd2sT8Eid4iEVe2lrLV-o6/view?usp=sharing) dataset, unzip and put files into `dublin\_data` directory. If you do not have access, download it [here](https://data.dublinked.ie/dataset/dublin-bus-gps-sample-data-from-dublin-city-council-insight-project/).
+Download [Dublin-bus](https://drive.google.com/file/d/1H6GdnppX5Emd2sT8Eid4iEVe2lrLV-o6/view?usp=sharing) dataset, unzip and put files into `data/raw/` directory. If you do not have access, download it [here](https://data.dublinked.ie/dataset/dublin-bus-gps-sample-data-from-dublin-city-council-insight-project/).
 
 ## Running 
 
@@ -29,7 +29,7 @@ Run data preprocessing
 
 ```
 cd src/
-python data.py
+python data_processing.py
 ```
 
 **Note**: please modify the `main` funtion in [data.py](https://github.com/haonan-li/dublin-bus-visulization/blob/master/src/data.py) by disabling and enabling particular function, to determine what data processing you want to do.

@@ -1,5 +1,6 @@
 unfolding
-dublin_data/*
+data/raw/*
 src/.ipynb_checkpoints*
+*.ipynb
 .DS_Store
 

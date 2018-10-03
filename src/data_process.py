@@ -2,11 +2,13 @@ import os
 import sys
 import pandas as pd
 import json
+import progressbar
 
 header = ['Timestamp','Line_ID','Direction','Journey_Pattern_ID','Time_Frame','Vehicle_Journey_ID', \
          'Operator','Congestion','Lon','Lat','Delay','Block_ID','Vehicle_ID','Stop_ID','At_Stop']
 
-data_dir = '../dublin_data/'
+data_dir = '../data/'
+raw_data_dir = data_dir + 'raw/'
 
 # output a dataframe to specific file
 def output(df,out_dir,out_file):
@@ -41,31 +43,56 @@ def congestion(data_file):
     output(nndf,'congestion/',data_file)
 
 # Count stops for each bus line
-def line_stop_summary(files):
+def line_stop(files):
     # Concat all files to a big dataframe
     ldf = list()
-    for data_file in files:
-        df = pd.read_csv(data_dir + data_file, header=None, names=header)
-        cols = ['Lon','Lat','At_Stop', 'Line_ID']
-        ndf = keep_cols(df,cols)
-        nndf = keep_rows(ndf,'At_Stop',larger,1)
-        ldf.append(nndf)
+    with progressbar.ProgressBar(max_value=len(files)) as bar:
+        i = 0
+        for data_file in files:
+            i += 1
+            bar.update(i)
+            df = pd.read_csv(raw_data_dir + data_file, header=None, names=header)
+            cols = ['Lon','Lat','At_Stop', 'Line_ID']
+            ndf = keep_cols(df,cols)
+            nndf = keep_rows(ndf,'At_Stop',larger,1)
+            ldf.append(nndf)
     odf = pd.concat(ldf)
     lines = set(odf['Line_ID'].values)
     # For all lines
     ldf = list()
-    for line in lines:
-        # Grab one line's data
-        ndf = odf[odf['Line_ID']==line]
-        # Group all stops and count the duplicated stops
-        # (If one position have more duplicates, it is more likely to be a exact stop)
-        cndf = ndf.groupby(ndf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
-        # Sort by count and keep top 500 stops
-        scndf = cndf.sort_values(by=['count'],ascending=False)[0:500]
-        ldf.append(scndf)
+    with progressbar.ProgressBar(max_value=len(lines)) as bar:
+        i = 0
+        for line in lines:
+            i += 1
+            bar.update(i)
+            # Grab one line's data
+            ndf = odf[odf['Line_ID']==line]
+            # Group all stops and count the duplicated stops
+            # (If one position have more duplicates, it is more likely to be a exact stop)
+            cndf = ndf.groupby(ndf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
+            # Sort by count and keep top 500 stops
+            scndf = cndf.sort_values(by=['count'],ascending=False)[0:500]
+            mscndf = merge_near_pos(scndf)
+            ldf.append(mscndf)
     odf = pd.concat(ldf)
-    output(odf,'stop/','stops.csv')
+    output(odf,'./','stops.csv')
 
+# square distance
+def distance(x1,y1,x2,y2):
+    return (x1-x2)**2+(y1-y2)**2
+
+# keep points far away each other
+def merge_near_pos(df):
+    df['keep'] = 1
+    df = df.reset_index()
+    ndim = df.shape[0]
+    for i in range(0,ndim-1):
+        for j in range(i+1,ndim):
+            if (df.loc[i,'keep'] == 1 and df.loc[j,'keep'] == 1 and \
+                    distance(df.loc[i,'Lon'],df.loc[i,'Lat'],df.loc[j,'Lon'],df.loc[j,'Lat']) < 1e-5):
+                df.loc[j,'keep'] = 0
+    ndf = df[df['keep']==1]
+    return ndf
 
 # Extract line's route
 def route(data_file):
@@ -108,24 +135,24 @@ def bus_line_summary(files):
         ndf = df[~df.Line_ID.isnull()]
         line_ids = [str(i) for i in set(ndf['Line_ID'].values)]
         lines[data_file] = line_ids
-    with open(data_dir + 'route/lines.txt','w') as f:
+    with open(data_dir + 'line_summary.json','w') as f:
         f.write(json.dumps(lines, indent=4))
 
 def main():
     # Raw data files
-    files = os.listdir(data_dir)
+    files = os.listdir(raw_data_dir)
     files = [item for item in files if (item[:4]=='siri')]
 
-    # Count each day's bus lineID
-    bus_line_summary(files)
-    # Count the stops for each bus line
-    line_stop_summary(files)
+    # Count everyday's bus lineID
+    # bus_line_summary(files)
 
-    # for item in files:
-    #     # Everyday's congestion may different, so process separately
-    #     congestion(item)
-    #     # Everyday's bus line may different, so process separately
-    #     route(item)
+    # Count the stops for each bus line
+    line_stop(files)
+
+    # Everyday's congestion may different, so process separately
+    # congestion(item)
+    # Everyday's bus line may different, so process separately
+    # route(item)
 
 
 if __name__ == '__main__':

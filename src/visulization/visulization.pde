@@ -41,19 +41,18 @@ ArrayList <SimplePointMarker> stops;
 // 
 
 // Data directory
-String stopDataDir = "../dublin_data/stop/";
-String lineDataDir = "../dublin_data/route/";
-String congestionDataDir = "../dublin_data/congestion/";
-String dataFile = "siri.20130102.csv";
+String stopFile = "../../data/stops.csv";
+String lineFile = "../../data/lines.csv";
+String congestionFile = "../../data/congestions.csv";
 
 void setup() {
   size(800, 600, OPENGL);
   smooth();
   
   initProvider();
-  readStops(stopDataDir+dataFile);
-  readLines(lineDataDir+dataFile);
-  readCongestions(congestionDataDir+dataFile);
+  readStops(stopFile);
+  readLines(lineFile);
+  readCongestions(congestionFile);
   mapSetting(); 
   initCP5();
 }
@@ -110,15 +109,14 @@ void initProvider() {
 }
 
 // Read stops from stop file
-void readStops(String directory) {
-  String[] geoCoords = loadStrings(directory);
+void readStops(String file) {
+  String[] geoCoords = loadStrings(file);
   stops = new ArrayList<SimplePointMarker>();
   Location loc;
   SimplePointMarker spm;
   int i=0;
   for (String line: geoCoords) {
     i += 1;
-    if (i>10) break;
     String[] geoCoord = split(line.trim(),",");
     loc = new Location(float(geoCoord[1]),float(geoCoord[0]));
     print (loc);
@@ -129,13 +127,13 @@ void readStops(String directory) {
 
 
 // Read lines from route file
-void readLines(String directory) {
+void readLines(String file) {
 
 }
 
 
 // Read congestion points from congestion file 
-void readCongestions(String directory) {
+void readCongestions(String file) {
 
 }
 
