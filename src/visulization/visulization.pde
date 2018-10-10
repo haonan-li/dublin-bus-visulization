@@ -35,7 +35,7 @@ AbstractMapProvider provider4;
 ArrayList <SimplePointMarker> stops;
 
 // Lines
-// 
+ArrayList <SimpleLinesMarker> lines;
 
 // Congestions
 // 
@@ -94,7 +94,9 @@ void mapSetting() {
   }
 
   // Lines
-  //
+  for (SimpleLinesMarker marker: lines) {
+    map.addMarkers(marker);
+  }
 
   // Congestion points
   //
@@ -128,7 +130,19 @@ void readStops(String file) {
 
 // Read lines from route file
 void readLines(String file) {
-
+  String[] geoLines = loadStrings(file);
+  lines = new ArrayList<SimpleLinesMarker>();
+  Location sLoc, eLoc;
+  SimpleLinesMarker splm;
+  for (String line: geoLines) {
+    String[] geoLine = split(line.trim(),",");
+    sLoc = new Location(float(geoLine[1]),float(geoLine[0]));
+    eLoc = new Location(float(geoLine[3]),float(geoLine[2]));
+    splm = new SimpleLinesMarker(sLoc,eLoc);
+    splm.setColor(color(233, 57, 35));
+    splm.setStrokeWeight(3);
+    lines.add(splm);
+  }
 }
 
 
@@ -149,10 +163,13 @@ void keyPressed() {
   } else if (key =='4') {
     map.mapDisplay.setProvider(provider4);
   } else if (key == '5') {
-    for (SimplePointMarker marker: stops) {
+    for (SimpleLinesMarker marker: lines) {
       marker.setHidden(true);
     }
-  } else if (key =='4') {
+  } else if (key =='6') {
+    for (SimpleLinesMarker marker: lines) {
+      marker.setHidden(false);
+    }
   } else if (key =='4') {
   }    
 }
