@@ -79,7 +79,7 @@ void setup() {
 
 void draw() {
   map.draw();
-  Location location = map.getLocation(mouseX,mouseY);
+  Location location = map.getLocation(mouseX, mouseY);
   zoomLevel = map.getZoomLevel();
   map.setZoomRange(minZoomRange, maxZoomRange);
 
@@ -90,10 +90,9 @@ void draw() {
   if (mouseX <= 160 && (mouseY >= 30 || mouseY <= 580)) {
     map.setZoomRange(zoomLevel, zoomLevel);
   }
-  
+
   // Congestion
   show_congestion();
-  
 }
 
 
@@ -105,89 +104,87 @@ void initCP5() {
 
   Group g1 = cp5.addGroup("stop")
     .setBackgroundColor(color(200))
-    .setBackgroundHeight(190)
-    .setBarHeight(20)
-    ;
+      .setBackgroundHeight(190)
+        .setBarHeight(20)
+          ;
 
   cp5.addToggle("show_stops")
-     .setValue(0)
-     .setPosition(10, 20)
-     .setSize(20, 20)
-     .moveTo(g1)
-     ;
+    .setValue(0)
+      .setPosition(10, 20)
+        .setSize(20, 20)
+          .moveTo(g1)
+            ;
 
   cp5.addScrollableList("show_stops_in_route:")
     .setPosition(10, 70)
-    .setSize(130, 110)
-    .setBarHeight(20)
-    .setItemHeight(20)
-    // Need revise
-    //.addItems(lineNum.toArray(new String[lineNum.size()]))
-    .setColorLabel(color(255))
-    .moveTo(g1)
-    ;
+      .setSize(130, 110)
+        .setBarHeight(20)
+          .setItemHeight(20)
+            // Need revise
+            //.addItems(lineNum.toArray(new String[lineNum.size()]))
+            .setColorLabel(color(255))
+              .moveTo(g1)
+                ;
 
   Group g2 = cp5.addGroup("route")
     .setBackgroundColor(color(200))
-    .setBackgroundHeight(190)
-    .setBarHeight(20)
-    ;
+      .setBackgroundHeight(190)
+        .setBarHeight(20)
+          ;
 
   cp5.addToggle("show_routes")
-     .setValue(0)
-     .setPosition(10, 20)
-     .setSize(20, 20)
-     .moveTo(g2)
-     ;
+    .setValue(0)
+      .setPosition(10, 20)
+        .setSize(20, 20)
+          .moveTo(g2)
+            ;
 
   cp5.addScrollableList("show_route:")
     .setPosition(10, 70)
-    .setSize(130, 110)
-    .setBarHeight(20)
-    .setItemHeight(20)
-    //.addItems(lineNum.toArray(new String[lineNum.size()]))
-    .setColorLabel(color(255))
-    .moveTo(g2)
-    ;
+      .setSize(130, 110)
+        .setBarHeight(20)
+          .setItemHeight(20)
+            //.addItems(lineNum.toArray(new String[lineNum.size()]))
+            .setColorLabel(color(255))
+              .moveTo(g2)
+                ;
 
   Group g3 = cp5.addGroup("congestion")
     .setBackgroundColor(color(200))
-    .setBackgroundHeight(60)
-    .setBarHeight(20)
-    ;
+      .setBackgroundHeight(60)
+        .setBarHeight(20)
+          ;
 
   cp5.addToggle("show_congestion")
-     .setValue(0)
-     .setPosition(10, 25)
-     .setSize(20, 20)
-     .moveTo(g3)
-     ;
+    .setValue(0)
+      .setPosition(10, 25)
+        .setSize(20, 20)
+          .moveTo(g3)
+            ;
 
   cp5.addSlider("days")
     .setValue(0)
-    .setPosition(10,70)
-    .setSize(95,20)
-    .setRange(1,31)
-    .moveTo(g3)
-    ;
+      .setPosition(10, 70)
+        .setSize(95, 20)
+          .setRange(1, 31)
+            .moveTo(g3)
+              ;
 
   accordion = cp5.addAccordion("acc")
     .setPosition(10, 30)
-    .setWidth(150)
-    .addItem(g1)
-    .addItem(g2)
-    .addItem(g3)
-    ;
+      .setWidth(150)
+        .addItem(g1)
+          .addItem(g2)
+            .addItem(g3)
+              ;
 
   accordion.open(0, 1, 2);
 
   accordion.setCollapseMode(Accordion.MULTI);
-
 }
 
 
 public void show_stops() {
-
 }
 
 public void show_congestion() {
@@ -195,16 +192,16 @@ public void show_congestion() {
   if (isShowCongestion == 1.0) {
     // First hide last show, then show current
     intDay = Math.round(cp5.getController("days").getValue());
-    for (SimplePointMarker marker: hmCongestion.get(str(intLastDay))){
+    for (SimplePointMarker marker : hmCongestion.get (str (intLastDay))) {
       marker.setHidden(true);
     }
-    for (SimplePointMarker marker: hmCongestion.get(str(intDay))){
+    for (SimplePointMarker marker : hmCongestion.get (str (intDay))) {
       marker.setHidden(false);
     }
     intLastDay = intDay;
     isLastShowCongestion = isShowCongestion;
-  } else if (isLastShowCongestion == 1.0){
-    for (SimplePointMarker marker: hmCongestion.get(str(intLastDay))){
+  } else if (isLastShowCongestion == 1.0) {
+    for (SimplePointMarker marker : hmCongestion.get (str (intLastDay))) {
       marker.setHidden(true);
     }
     isLastShowCongestion = 0.0;
@@ -221,10 +218,15 @@ void mapSetting() {
   map.setPanningRestriction(dublinLocation, 50);
   MapUtils.createDefaultEventDispatcher(this, map);
 
-  // // Stops
-  // for (SimplePointMarker marker : hmStops.values ()) {
-  //   map.addMarkers(marker);
-  // }
+  // Stops
+  for (String key : hmStops.keySet ()) {
+    ArrayList<SimplePointMarker> value = new ArrayList<SimplePointMarker>();
+    value = hmStops.get(key);
+    for (SimplePointMarker marker : value) {
+      map.addMarkers(marker);
+    }
+  }
+
 
   // // Lines
   // for (SimpleLinesMarker marker: lines) {
@@ -234,14 +236,12 @@ void mapSetting() {
   // Congestion points
   intDay = 1;
   intLastDay = 1;
-  for (String day: hmCongestion.keySet()) {
-    for (SimplePointMarker marker: hmCongestion.get(day)){
+  for (String day : hmCongestion.keySet ()) {
+    for (SimplePointMarker marker : hmCongestion.get (day)) {
       marker.setHidden(true);
       map.addMarkers(marker);
     }
   }
-
-
 }
 
 void initProvider() {
@@ -254,7 +254,7 @@ void initProvider() {
 void readLinesID(String file) {
   String [] geoCoords = loadStrings(file);
   List<String> lineNum = new ArrayList<String>();
-  for (String line: geoCoords) {
+  for (String line : geoCoords) {
     lineNum.add(str(int(float(line.trim()))));
   }
   print (lineNum);
@@ -277,7 +277,7 @@ void readStops(String file) {
   for (String line : geoCoords) {
     String[] geoCoord = split(line.trim(), ",");
     //If line ID is same as the last one, save in a same ArrayList
-    if (geoCoord[1] == lastLine) {
+    if (geoCoord[1].equals(lastLine)) {
       loc = new Location(float(geoCoord[3]), float(geoCoord[2]));
       spm = new SimplePointMarker(loc);
       stops.add(spm);
@@ -325,42 +325,42 @@ void readStops(String file) {
 void readCongestions(String file) {
   String[] geoCoords = loadStrings(file);
   hmCongestion = new HashMap<String, ArrayList<SimplePointMarker>>();
-  for (int i=0; i<32; i++){
+  for (int i=0; i<32; i++) {
     ArrayList <SimplePointMarker> oneDayCong = new ArrayList<SimplePointMarker>();
-    hmCongestion.put(Integer.toString(i),oneDayCong);
+    hmCongestion.put(Integer.toString(i), oneDayCong);
   }
   Location loc;
   int level;
   String day;
   SimplePointMarker spcm;
   float ratio=0.9;
-  for (String line: geoCoords) {
-    String[] geoCoord = split(line.trim(),",");
-    loc = new Location(float(geoCoord[1]),float(geoCoord[0]));
+  for (String line : geoCoords) {
+    String[] geoCoord = split(line.trim(), ",");
+    loc = new Location(float(geoCoord[1]), float(geoCoord[0]));
     level=int(geoCoord[2]);
     day = geoCoord[3];
     spcm = new SimplePointMarker(loc);
     ///////////////////////////////////////////////////////
     // Modify this part ---------------------start---------
-    spcm.setColor(color(153,0,13));
+    spcm.setColor(color(153, 0, 13));
     spcm.setRadius(sqrt(level/100)*10*ratio);
     tint(255, 127);
-    if(level<3000){
-    spcm.setColor(color(203,24,29));
-    spcm.setRadius(sqrt(level/100)*10*ratio);
+    if (level<3000) {
+      spcm.setColor(color(203, 24, 29));
+      spcm.setRadius(sqrt(level/100)*10*ratio);
     }
-    if(level<2000){
-    spcm.setColor(color(239,59,44));
+    if (level<2000) {
+      spcm.setColor(color(239, 59, 44));
     }
-    if(level<1000){
-    spcm.setColor(color(251,106,74));
+    if (level<1000) {
+      spcm.setColor(color(251, 106, 74));
     }
     //-----------------------------------------end---------
     ///////////////////////////////////////////////////////
     spcm.setStrokeWeight(0);
     ArrayList <SimplePointMarker> tmp = hmCongestion.get(day);
     tmp.add(spcm);
-    hmCongestion.put(day,tmp);
+    hmCongestion.put(day, tmp);
   }
 }
 
