@@ -61,8 +61,19 @@ def extract_congestion(files):
     odf['Lat2'] = odf.apply(lambda row: round(row.Lat,5),axis=1)
     codf = odf.drop(['Lon','Lat'], axis=1)
     ccodf = codf.groupby(codf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
-    sccodf = ccodf.sort_values(by=['count'],ascending=False)[0:50]
-    output(sccodf,'./','congestion.csv')
+    sccodf = ccodf.sort_values(by=['count'],ascending=False)[0:500]
+    sccodf['keep'] = 1
+    sccodf = sccodf.reset_index()
+    ndim = sccodf.shape[0]
+    threshold = 1e-5
+    for i in range(0,ndim-1):
+        for j in range(i+1,ndim):
+            if (sccodf.loc[i,'keep'] == 1 and sccodf.loc[j,'keep'] == 1 and \
+                    distance(sccodf.loc[i,'Lon2'],sccodf.loc[i,'Lat2'],sccodf.loc[j,'Lon2'],sccodf.loc[j,'Lat2']) < threshold):
+                sccodf.loc[j,'keep'] = 0
+    fdf = sccodf[sccodf['keep']==1]
+    fdf = fdf.drop(['index','Congestion','keep'],axis=1)
+    output(fdf,'./','congestion.csv')
 
 
 # ---------------------------------- Stops ----------------------------------- #

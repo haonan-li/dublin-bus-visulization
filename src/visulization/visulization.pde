@@ -24,6 +24,7 @@ Location dublinLocation = new Location(53.33f, -6.35f);
 ControlP5 cp5;
 Accordion accordion;
 
+
 // Map container
 UnfoldingMap map;
 
@@ -36,7 +37,7 @@ AbstractMapProvider provider4;
 int zoomLevel, prevZoomLevel, minZoomRange, maxZoomRange;
 
 // Stops
-ArrayList <SimplePointMarker> stops;
+HashMap<String, ArrayList <SimplePointMarker>> hmStops;
 
 // Lines
 ArrayList <SimpleLinesMarker> lines;
@@ -73,12 +74,12 @@ void draw() {
   zoomLevel = map.getZoomLevel();
   map.setZoomRange(minZoomRange, maxZoomRange);
 
-  if (mouseX > 160 || mouseY < 40 || mouseY > 585) {
+  if (mouseX > 160 || mouseY < 30 || mouseY > 580) {
     fill(0);
     text(location.getLat() + ", " + location.getLon(), mouseX, mouseY);
 //    println(zoomLevel);
   }
-  if (mouseX <= 160 && (mouseY >= 40 || mouseY <= 585)) {
+  if (mouseX <= 160 && (mouseY >= 30 || mouseY <= 580)) {
     map.setZoomRange(zoomLevel, zoomLevel);
   }
 }
@@ -99,7 +100,7 @@ void initCP5() {
   cp5.addToggle("show_stops")
      .setValue(0)
      .setPosition(10, 20)
-     .setSize(95, 20)
+     .setSize(20, 20)
      .moveTo(g1)
      ;
 
@@ -122,7 +123,7 @@ void initCP5() {
   cp5.addToggle("show_routes")
      .setValue(0)
      .setPosition(10, 20)
-     .setSize(95, 20)
+     .setSize(20, 20)
      .moveTo(g2)
      ;
 
@@ -145,9 +146,17 @@ void initCP5() {
   cp5.addToggle("show_congestion")
      .setValue(0)
      .setPosition(10, 25)
-     .setSize(95, 20)
+     .setSize(20, 20)
      .moveTo(g3)
      ;
+
+  cp5.addSlider("days")
+    .setValue(0)
+    .setPosition(10,70)
+    .setSize(95,20)
+    .setRange(1,31)
+    .moveTo(g3)
+    ;
 
   accordion = cp5.addAccordion("acc")
     .setPosition(10, 30)
@@ -179,7 +188,7 @@ void mapSetting() {
   MapUtils.createDefaultEventDispatcher(this, map);
 
   // Stops
-  for (SimplePointMarker marker: stops) {
+  for (SimplePointMarker marker : hmStops.values ()) {
     map.addMarkers(marker);
   }
 
@@ -202,22 +211,37 @@ void initProvider() {
 
 // Read stops from stop file
 void readStops(String file) {
+  //Load String data
   String[] geoCoords = loadStrings(file);
-  stops = new ArrayList<SimplePointMarker>();
+  ArrayList <SimplePointMarker> stops = new ArrayList<SimplePointMarker>();
+  //Hash Map: key is line id and value is an Arraylist of location's SimplePointMarker
+  hmStops = new HashMap<String, ArrayList <SimplePointMarker>>();
   Location loc;
   SimplePointMarker spm;
-  int i=0;
-  for (String line: geoCoords) {
-    i += 1;
-    String[] geoCoord = split(line.trim(),",");
-    loc = new Location(float(geoCoord[1]),float(geoCoord[0]));
-//    print (loc);
-    spm = new SimplePointMarker(loc);
-    stops.add(spm);
+
+  //Line ID of previous row
+  String lastLine = "1";
+
+  //Visit each row
+  for (String line : geoCoords) {
+    String[] geoCoord = split(line.trim(), ",");
+    //If line ID is same as the last one, save in a same ArrayList
+    if (geoCoord[1] == lastLine) {
+      loc = new Location(float(geoCoord[3]), float(geoCoord[2]));
+      spm = new SimplePointMarker(loc);
+      stops.add(spm);
+    } else {
+      //If line ID is different with the last one, write data to hashmap
+      //Create a new arraylist to save the next line
+      hmStops.put(lastLine, stops);
+      lastLine = geoCoord[1];
+      stops.clear();
+      loc = new Location(float(geoCoord[3]), float(geoCoord[2]));
+      spm = new SimplePointMarker(loc);
+      stops.add(spm);
+    }
   }
 }
-
-
 // Read lines from route file
 void readLines(String file) {
   String[] geoLines = loadStrings(file);
@@ -253,11 +277,11 @@ void keyPressed() {
   } else if (key =='4') {
     map.mapDisplay.setProvider(provider4);
   } else if (key == '5') {
-    for (SimpleLinesMarker marker: lines) {
+    for (SimplePointMarker marker : hmStops.values ()) {
       marker.setHidden(true);
     }
   } else if (key =='6') {
-    for (SimpleLinesMarker marker: lines) {
+    for (SimplePointMarker marker : hmStops.valu6556es ()) {
       marker.setHidden(false);
     }
   } else if (key =='4') {
