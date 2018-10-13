@@ -39,13 +39,30 @@ def larger(df,col,threshold):
 def distance(x1,y1,x2,y2):
     return (x1-x2)**2+(y1-y2)**2
 
+
+# ------------------------------ Congestion --------------------------------- #
+
 # Extract congestion information
-def congestion(data_file):
-    df = pd.read_csv(data_dir + data_file, header=None, names=header)
-    cols = ['Congestion','Lon','Lat']
-    ndf = keep_cols(df,cols)
-    nndf = keep_rows(ndf,'Congestion',larger,1)
-    output(nndf,'congestion/',data_file)
+def extract_congestion(files):
+    # Concat all files to a big dataframe
+    ldf = list()
+    with progressbar.ProgressBar(max_value=len(files)) as bar:
+        i = 0
+        for data_file in files:
+            i += 1
+            bar.update(i)
+            df = pd.read_csv(raw_data_dir + data_file, header=None, names=header)
+            cols = ['Congestion','Lon','Lat']
+            ndf = keep_cols(df,cols)
+            nndf = keep_rows(ndf,'Congestion',larger,1)
+            ldf.append(nndf)
+    odf = pd.concat(ldf)
+    odf['Lon2'] = odf.apply(lambda row: round(row.Lon,5),axis=1)
+    odf['Lat2'] = odf.apply(lambda row: round(row.Lat,5),axis=1)
+    codf = odf.drop(['Lon','Lat'], axis=1)
+    ccodf = codf.groupby(codf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
+    sccodf = ccodf.sort_values(by=['count'],ascending=False)[0:50]
+    output(sccodf,'./','congestion.csv')
 
 
 # ---------------------------------- Stops ----------------------------------- #
@@ -193,13 +210,13 @@ def main():
     # extract_stops(files)
     # print ('Done !')
 
-    # Extract routes for each bus line
-    print ('Begin extract routes ... ')
-    extract_routes(files)
-    print ('Done !')
+    # # Extract routes for each bus line
+    # print ('Begin extract routes ... ')
+    # extract_routes(files)
+    # print ('Done !')
 
-    # Everyday's congestion may different, so process separately
-    # congestion(item)
+    # Congestion
+    extract_congestion(files)
 
 
 if __name__ == '__main__':
