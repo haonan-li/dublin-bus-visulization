@@ -17,10 +17,12 @@ import java.text.*;
 
 import controlP5.*; 
 
-Location dublinLocation = new Location(53.33f, -6.25f);
+//Location dublinLocation = new Location(53.33f, -6.25f);
+Location dublinLocation = new Location(53.33f, -6.35f);
 
 // Control panel
 ControlP5 cp5;
+Accordion accordion;
 
 // Map container
 UnfoldingMap map;
@@ -45,8 +47,10 @@ String stopFile = "../../data/stops.csv";
 String lineFile = "../../data/lines.csv";
 String congestionFile = "../../data/congestions.csv";
 
+String[] arr = {"1", "2", "8", "11", "22", "221", "240"};
+
 void setup() {
-  size(800, 600, OPENGL);
+  size(1000, 600, OPENGL);
   smooth();
   
   initProvider();
@@ -69,12 +73,84 @@ void draw() {
 // Control panel
 void initCP5() {
   cp5 = new ControlP5(this);
-  cp5.addButton("Map style")
-    .setCaptionLabel("style")
-    .setPosition(0,0)
-    .setSize(100,59);
-  // cp5.addButton("More")
-  //
+  ControlFont cf = new ControlFont(createFont("Arial", 9));
+  cp5.setFont(cf);
+
+  Group g1 = cp5.addGroup("stop")
+    .setBackgroundColor(color(200))
+    .setBackgroundHeight(190)
+    .setBarHeight(20)
+    ;
+
+  cp5.addToggle("show_stops")
+     .setValue(0)
+     .setPosition(10, 20)
+     .setSize(95, 20)
+     .moveTo(g1)
+     ;
+
+  cp5.addScrollableList("show_stops_in_route:")
+    .setPosition(10, 70)
+    .setSize(130, 110)
+    .setBarHeight(20)
+    .setItemHeight(20)
+    .addItems(arr)
+    .setColorLabel(color(255))
+    .moveTo(g1)
+    ;
+
+  Group g2 = cp5.addGroup("route")
+    .setBackgroundColor(color(200))
+    .setBackgroundHeight(190)
+    .setBarHeight(20)
+    ;
+
+  cp5.addToggle("show_routes")
+     .setValue(0)
+     .setPosition(10, 20)
+     .setSize(95, 20)
+     .moveTo(g2)
+     ;
+
+  cp5.addScrollableList("show_route:")
+    .setPosition(10, 70)
+    .setSize(130, 110)
+    .setBarHeight(20)
+    .setItemHeight(20)
+    .addItems(arr)
+    .setColorLabel(color(255))
+    .moveTo(g2)
+    ;
+
+  Group g3 = cp5.addGroup("congestion")
+    .setBackgroundColor(color(200))
+    .setBackgroundHeight(60)
+    .setBarHeight(20)
+    ;
+
+  cp5.addToggle("show_congestion")
+     .setValue(0)
+     .setPosition(10, 25)
+     .setSize(95, 20)
+     .moveTo(g3)
+     ;
+
+  accordion = cp5.addAccordion("acc")
+    .setPosition(10, 40)
+    .setWidth(150)
+    .addItem(g1)
+    .addItem(g2)
+    .addItem(g3)
+    ;
+
+  accordion.open(0, 1, 2);
+
+  accordion.setCollapseMode(Accordion.MULTI);
+}
+
+
+public void show_stops() {
+
 }
 
 
@@ -121,7 +197,7 @@ void readStops(String file) {
     i += 1;
     String[] geoCoord = split(line.trim(),",");
     loc = new Location(float(geoCoord[1]),float(geoCoord[0]));
-    print (loc);
+//    print (loc);
     spm = new SimplePointMarker(loc);
     stops.add(spm);
   }
