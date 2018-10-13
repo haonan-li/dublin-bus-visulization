@@ -1,6 +1,6 @@
 /**
  * Displays the subway lines of dublin.
- * 
+ *
  * For colleborators: see API at http://unfoldingmaps.org/javadoc/index.html
  * Unfolding Tutorial: http://unfoldingmaps.org/tutorials/getting-started-in-processing.html
  */
@@ -15,7 +15,7 @@ import de.fhpotsdam.unfolding.marker.*;
 import java.util.*;
 import java.text.*;
 
-import controlP5.*; 
+import controlP5.*;
 
 //Location dublinLocation = new Location(53.33f, -6.25f);
 Location dublinLocation = new Location(53.33f, -6.35f);
@@ -33,6 +33,8 @@ AbstractMapProvider provider2;
 AbstractMapProvider provider3;
 AbstractMapProvider provider4;
 
+int zoomLevel, prevZoomLevel, minZoomRange, maxZoomRange;
+
 // Stops
 ArrayList <SimplePointMarker> stops;
 
@@ -40,7 +42,7 @@ ArrayList <SimplePointMarker> stops;
 ArrayList <SimpleLinesMarker> lines;
 
 // Congestions
-// 
+//
 
 // Data directory
 String stopFile = "../../data/stops.csv";
@@ -52,12 +54,15 @@ String[] arr = {"1", "2", "8", "11", "22", "221", "240"};
 void setup() {
   size(1000, 600, OPENGL);
   smooth();
-  
+
+  minZoomRange = 9;
+  maxZoomRange = 17;
+
   initProvider();
   readStops(stopFile);
   readLines(lineFile);
   readCongestions(congestionFile);
-  mapSetting(); 
+  mapSetting();
   initCP5();
 }
 
@@ -65,8 +70,17 @@ void setup() {
 void draw() {
   map.draw();
   Location location = map.getLocation(mouseX,mouseY);
-  fill(0);
-  text(location.getLat() + ", " + location.getLon(), mouseX, mouseY);
+  zoomLevel = map.getZoomLevel();
+  map.setZoomRange(minZoomRange, maxZoomRange);
+
+  if (mouseX > 160 || mouseY < 40 || mouseY > 585) {
+    fill(0);
+    text(location.getLat() + ", " + location.getLon(), mouseX, mouseY);
+//    println(zoomLevel);
+  }
+  if (mouseX <= 160 && (mouseY >= 40 || mouseY <= 585)) {
+    map.setZoomRange(zoomLevel, zoomLevel);
+  }
 }
 
 
@@ -136,7 +150,7 @@ void initCP5() {
      ;
 
   accordion = cp5.addAccordion("acc")
-    .setPosition(10, 40)
+    .setPosition(10, 30)
     .setWidth(150)
     .addItem(g1)
     .addItem(g2)
@@ -160,10 +174,10 @@ void mapSetting() {
   map = new UnfoldingMap(this, provider1);
   map.zoomToLevel(11);
   map.panTo(dublinLocation);
-  map.setZoomRange(9, 17); // prevent zooming too far out
+  map.setZoomRange(minZoomRange, maxZoomRange); // prevent zooming too far out
   map.setPanningRestriction(dublinLocation, 50);
   MapUtils.createDefaultEventDispatcher(this, map);
-  
+
   // Stops
   for (SimplePointMarker marker: stops) {
     map.addMarkers(marker);
@@ -176,7 +190,7 @@ void mapSetting() {
 
   // Congestion points
   //
-  
+
 }
 
 void initProvider() {
@@ -222,7 +236,7 @@ void readLines(String file) {
 }
 
 
-// Read congestion points from congestion file 
+// Read congestion points from congestion file
 void readCongestions(String file) {
 
 }
@@ -247,6 +261,6 @@ void keyPressed() {
       marker.setHidden(false);
     }
   } else if (key =='4') {
-  }    
+  }
 }
 
