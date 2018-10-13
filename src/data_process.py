@@ -44,35 +44,42 @@ def distance(x1,y1,x2,y2):
 
 # Extract congestion information
 def extract_congestion(files):
-    # Concat all files to a big dataframe
     ldf = list()
-    with progressbar.ProgressBar(max_value=len(files)) as bar:
-        i = 0
-        for data_file in files:
-            i += 1
-            bar.update(i)
-            df = pd.read_csv(raw_data_dir + data_file, header=None, names=header)
-            cols = ['Congestion','Lon','Lat']
-            ndf = keep_cols(df,cols)
-            nndf = keep_rows(ndf,'Congestion',larger,1)
-            ldf.append(nndf)
-    odf = pd.concat(ldf)
-    odf['Lon2'] = odf.apply(lambda row: round(row.Lon,5),axis=1)
-    odf['Lat2'] = odf.apply(lambda row: round(row.Lat,5),axis=1)
-    codf = odf.drop(['Lon','Lat'], axis=1)
-    ccodf = codf.groupby(codf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
-    sccodf = ccodf.sort_values(by=['count'],ascending=False)[0:500]
-    sccodf['keep'] = 1
-    sccodf = sccodf.reset_index()
-    ndim = sccodf.shape[0]
     threshold = 1e-5
-    for i in range(0,ndim-1):
-        for j in range(i+1,ndim):
-            if (sccodf.loc[i,'keep'] == 1 and sccodf.loc[j,'keep'] == 1 and \
-                    distance(sccodf.loc[i,'Lon2'],sccodf.loc[i,'Lat2'],sccodf.loc[j,'Lon2'],sccodf.loc[j,'Lat2']) < threshold):
-                sccodf.loc[j,'keep'] = 0
-    fdf = sccodf[sccodf['keep']==1]
-    fdf = fdf.drop(['index','Congestion','keep'],axis=1)
+    with progressbar.ProgressBar(max_value=len(files)) as bar:
+        fn = 0
+        for data_file in files:
+            fn += 1
+            bar.update(fn)
+            # Keep useful cols
+            df = pd.read_csv(raw_data_dir + data_file, header=None, names=header)
+            cols = ['Congestion','Lon','Lat','Time_Frame']
+            ndf = keep_cols(df,cols)
+            ndf = keep_rows(ndf,'Congestion',larger,1)
+            # Find congestion pos
+            ndf['Lon2'] = ndf.apply(lambda row: round(row.Lon,5),axis=1)
+            ndf['Lat2'] = ndf.apply(lambda row: round(row.Lat,5),axis=1)
+            cndf = ndf.drop(['Lon','Lat'], axis=1)
+            cndf = cndf.groupby(cndf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
+            # Merge near congestion pos
+            scndf = cndf.sort_values(by=['count'],ascending=False)[0:500]
+            scndf['keep'] = 1
+            scndf = scndf.reset_index()
+            ndim = scndf.shape[0]
+            for i in range(0,ndim-1):
+                for j in range(i+1,ndim):
+                    if (scndf.loc[i,'keep'] == 1 and scndf.loc[j,'keep'] == 1 and \
+                            distance(scndf.loc[i,'Lon2'],scndf.loc[i,'Lat2'],scndf.loc[j,'Lon2'],scndf.loc[j,'Lat2']) < threshold):
+                        scndf.loc[i,'count'] += scndf.loc[j,'count']
+                        scndf.loc[j,'keep'] = 0
+            # Keep top 20 congestion pos
+            scndf = scndf.sort_values(by=['count'],ascending=False)
+            ldf.append(scndf[0:20])
+        # Day
+        odf = pd.concat(ldf)
+        odf['Day'] = odf.apply(lambda row: int(row.Time_Frame[8:10]),axis=1)
+        fdf = odf[odf['keep']==1]
+        fdf = fdf.drop(['index','Congestion','keep','Time_Frame'],axis=1)
     output(fdf,'./','congestion.csv')
 
 
@@ -195,13 +202,19 @@ def point2line(df):
 # Generate a json file contains all line_ids for all days
 def line_summary(files):
     lines = dict()
+    ldf = list()
     for data_file in files:
         df = pd.read_csv(raw_data_dir + data_file, header=None, names=header)
         ndf = df[~df.Line_ID.isnull()]
         line_ids = [str(i) for i in set(ndf['Line_ID'].values)]
         lines[data_file] = line_ids
+        ldf.append(ndf)
+    odf = pd.concat(ldf)
+    odf = keep_cols(odf,['Line_ID'])
+    odf = odf.drop_duplicates()
     with open(data_dir + 'line_summary.json','w') as f:
         f.write(json.dumps(lines, indent=4))
+    output(odf,'./','lineID.csv')
 
 
 # ---------------------------------- Main ------------------------------------ #
@@ -213,7 +226,7 @@ def main():
 
     # # Count everyday's bus lineID
     # print ('Begin line summary ... ')
-    # line_summary(files)
+    line_summary(files)
     # print ('Done !')
 
     # # Extract stops for each bus line
@@ -227,7 +240,7 @@ def main():
     # print ('Done !')
 
     # Congestion
-    extract_congestion(files)
+    # extract_congestion(files)
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ import de.fhpotsdam.unfolding.marker.*;
 
 import java.util.*;
 import java.text.*;
+import java.math.*;
 
 import controlP5.*;
 
@@ -37,20 +38,25 @@ AbstractMapProvider provider4;
 int zoomLevel, prevZoomLevel, minZoomRange, maxZoomRange;
 
 // Stops
+float isShowStops, isLastShowStops;
 HashMap<String, ArrayList <SimplePointMarker>> hmStops;
 
 // Lines
-ArrayList <SimpleLinesMarker> lines;
+float isShowLines, isLastShowLines;
+HashMap<String, ArrayList <SimpleLinesMarker>> hmLines;
 
 // Congestions
-//
+int intDay, intLastDay;
+float isShowCongestion, isLastShowCongestion;
+HashMap<String, ArrayList <SimplePointMarker>> hmCongestion;
 
 // Data directory
 String stopFile = "../../data/stops.csv";
 String lineFile = "../../data/lines.csv";
-String congestionFile = "../../data/congestions.csv";
+String lineIDFile = "../../data/lineID.csv";
+String congestionFile = "../../data/congestion.csv";
 
-String[] arr = {"1", "2", "8", "11", "22", "221", "240"};
+ArrayList<String> lineNum ;
 
 void setup() {
   size(1000, 600, OPENGL);
@@ -60,11 +66,14 @@ void setup() {
   maxZoomRange = 17;
 
   initProvider();
+  readLinesID(lineIDFile);
+  print (lineNum);
   readStops(stopFile);
-  readLines(lineFile);
+  // readLines(lineFile);
   readCongestions(congestionFile);
   mapSetting();
   initCP5();
+  println ("Init done!!!!");
 }
 
 
@@ -77,11 +86,14 @@ void draw() {
   if (mouseX > 160 || mouseY < 30 || mouseY > 580) {
     fill(0);
     text(location.getLat() + ", " + location.getLon(), mouseX, mouseY);
-//    println(zoomLevel);
   }
   if (mouseX <= 160 && (mouseY >= 30 || mouseY <= 580)) {
     map.setZoomRange(zoomLevel, zoomLevel);
   }
+  
+  // Congestion
+  show_congestion();
+  
 }
 
 
@@ -109,7 +121,8 @@ void initCP5() {
     .setSize(130, 110)
     .setBarHeight(20)
     .setItemHeight(20)
-    .addItems(arr)
+    // Need revise
+    //.addItems(lineNum.toArray(new String[lineNum.size()]))
     .setColorLabel(color(255))
     .moveTo(g1)
     ;
@@ -132,7 +145,7 @@ void initCP5() {
     .setSize(130, 110)
     .setBarHeight(20)
     .setItemHeight(20)
-    .addItems(arr)
+    //.addItems(lineNum.toArray(new String[lineNum.size()]))
     .setColorLabel(color(255))
     .moveTo(g2)
     ;
@@ -169,6 +182,7 @@ void initCP5() {
   accordion.open(0, 1, 2);
 
   accordion.setCollapseMode(Accordion.MULTI);
+
 }
 
 
@@ -176,6 +190,26 @@ public void show_stops() {
 
 }
 
+public void show_congestion() {
+  float isShowCongestion = cp5.getController("show_congestion").getValue();
+  if (isShowCongestion == 1.0) {
+    // First hide last show, then show current
+    intDay = Math.round(cp5.getController("days").getValue());
+    for (SimplePointMarker marker: hmCongestion.get(str(intLastDay))){
+      marker.setHidden(true);
+    }
+    for (SimplePointMarker marker: hmCongestion.get(str(intDay))){
+      marker.setHidden(false);
+    }
+    intLastDay = intDay;
+    isLastShowCongestion = isShowCongestion;
+  } else if (isLastShowCongestion == 1.0){
+    for (SimplePointMarker marker: hmCongestion.get(str(intLastDay))){
+      marker.setHidden(true);
+    }
+    isLastShowCongestion = 0.0;
+  }
+}
 
 // Set all map elements
 void mapSetting() {
@@ -187,18 +221,26 @@ void mapSetting() {
   map.setPanningRestriction(dublinLocation, 50);
   MapUtils.createDefaultEventDispatcher(this, map);
 
-  // Stops
-  for (SimplePointMarker marker : hmStops.values ()) {
-    map.addMarkers(marker);
-  }
+  // // Stops
+  // for (SimplePointMarker marker : hmStops.values ()) {
+  //   map.addMarkers(marker);
+  // }
 
-  // Lines
-  for (SimpleLinesMarker marker: lines) {
-    map.addMarkers(marker);
-  }
+  // // Lines
+  // for (SimpleLinesMarker marker: lines) {
+  //   map.addMarkers(marker);
+  // }
 
   // Congestion points
-  //
+  intDay = 1;
+  intLastDay = 1;
+  for (String day: hmCongestion.keySet()) {
+    for (SimplePointMarker marker: hmCongestion.get(day)){
+      marker.setHidden(true);
+      map.addMarkers(marker);
+    }
+  }
+
 
 }
 
@@ -207,6 +249,15 @@ void initProvider() {
   provider2 = new Google.GoogleMapProvider();
   provider3 = new Microsoft.RoadProvider();
   provider4 = new Microsoft.AerialProvider();
+}
+
+void readLinesID(String file) {
+  String [] geoCoords = loadStrings(file);
+  List<String> lineNum = new ArrayList<String>();
+  for (String line: geoCoords) {
+    lineNum.add(str(int(float(line.trim()))));
+  }
+  print (lineNum);
 }
 
 // Read stops from stop file
@@ -242,27 +293,75 @@ void readStops(String file) {
     }
   }
 }
+
 // Read lines from route file
-void readLines(String file) {
-  String[] geoLines = loadStrings(file);
-  lines = new ArrayList<SimpleLinesMarker>();
-  Location sLoc, eLoc;
-  SimpleLinesMarker splm;
-  for (String line: geoLines) {
-    String[] geoLine = split(line.trim(),",");
-    sLoc = new Location(float(geoLine[1]),float(geoLine[0]));
-    eLoc = new Location(float(geoLine[3]),float(geoLine[2]));
-    splm = new SimpleLinesMarker(sLoc,eLoc);
-    splm.setColor(color(233, 57, 35));
-    splm.setStrokeWeight(3);
-    lines.add(splm);
-  }
-}
+// void readLines(String file) {
+//   String[] geoLines = loadStrings(file);
+//   hmLines = new HashMap<String, ArrayList <SimpleLinesMarker>>();
+//   for (String lineID: lineNum) {
+//     ArrayList<SimpleLinesMarker> oneLine = new ArrayList<SimpleLinesMarker>();
+//     hmLines.put(lineID,oneLine);
+//   }
+//   Location sLoc, eLoc;
+//   SimpleLinesMarker splm;
+//   String lineID;
+//   for (String line: geoLines) {
+//     String[] geoLine = split(line.trim(),",");
+//     lineID = str(int(float(geoLine[0])));
+//     sLoc = new Location(float(geoLine[2]),float(geoLine[1]));
+//     eLoc = new Location(float(geoLine[4]),float(geoLine[3]));
+//     splm = new SimpleLinesMarker(sLoc,eLoc);
+//     splm.setColor(color(233, 57, 35));
+//     splm.setStrokeWeight(3);
+//     splm.setStrokeWeight(0);
+//     ArrayList <SimpleLinesMarker> tmp = hmLines.get(lineID);
+//     tmp.add(splm);
+//     hmLines.put(lineID,tmp);
+//   }
+// }
 
 
 // Read congestion points from congestion file
 void readCongestions(String file) {
-
+  String[] geoCoords = loadStrings(file);
+  hmCongestion = new HashMap<String, ArrayList<SimplePointMarker>>();
+  for (int i=0; i<32; i++){
+    ArrayList <SimplePointMarker> oneDayCong = new ArrayList<SimplePointMarker>();
+    hmCongestion.put(Integer.toString(i),oneDayCong);
+  }
+  Location loc;
+  int level;
+  String day;
+  SimplePointMarker spcm;
+  float ratio=0.9;
+  for (String line: geoCoords) {
+    String[] geoCoord = split(line.trim(),",");
+    loc = new Location(float(geoCoord[1]),float(geoCoord[0]));
+    level=int(geoCoord[2]);
+    day = geoCoord[3];
+    spcm = new SimplePointMarker(loc);
+    ///////////////////////////////////////////////////////
+    // Modify this part ---------------------start---------
+    spcm.setColor(color(153,0,13));
+    spcm.setRadius(sqrt(level/100)*10*ratio);
+    tint(255, 127);
+    if(level<3000){
+    spcm.setColor(color(203,24,29));
+    spcm.setRadius(sqrt(level/100)*10*ratio);
+    }
+    if(level<2000){
+    spcm.setColor(color(239,59,44));
+    }
+    if(level<1000){
+    spcm.setColor(color(251,106,74));
+    }
+    //-----------------------------------------end---------
+    ///////////////////////////////////////////////////////
+    spcm.setStrokeWeight(0);
+    ArrayList <SimplePointMarker> tmp = hmCongestion.get(day);
+    tmp.add(spcm);
+    hmCongestion.put(day,tmp);
+  }
 }
 
 
@@ -277,13 +376,7 @@ void keyPressed() {
   } else if (key =='4') {
     map.mapDisplay.setProvider(provider4);
   } else if (key == '5') {
-    for (SimplePointMarker marker : hmStops.values ()) {
-      marker.setHidden(true);
-    }
   } else if (key =='6') {
-    for (SimplePointMarker marker : hmStops.valu6556es ()) {
-      marker.setHidden(false);
-    }
   } else if (key =='4') {
   }
 }
