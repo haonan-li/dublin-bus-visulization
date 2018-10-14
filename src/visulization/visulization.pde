@@ -82,9 +82,8 @@ void setup() {
 
   initProvider();
   readLinesID(lineIDFile);
-  print (lineNum);
   readStops(stopFile);
-  // readLines(lineFile);
+  readLines(lineFile);
   readCongestions(congestionFile);
   mapSetting();
   initCP5();
@@ -108,11 +107,7 @@ void draw() {
     map.setZoomRange(zoomLevel, zoomLevel);
     map.setPanningRestriction(newLocation, 0);
   }
-  
-//  fill(0);
-//  textSize(20);
-//  text("hello", 150, 200);
-  
+
   // Congestion
   show_congestion();
 }
@@ -244,7 +239,7 @@ public void show_congestion() {
     intLastDay = intDay;
     isLastShowCongestion = isShowCongestion;
   } else if (isLastShowCongestion == 1.0) {
-    for (SimplePointMarker marker : hmCongestion.get (str (intLastDay))) {
+    for (SimplePointMarker marker: hmCongestion.get(str(intLastDay))){
       marker.setHidden(true);
     }
     isLastShowCongestion = 0.0;
@@ -279,12 +274,21 @@ void mapSetting() {
   // Congestion points
   intDay = 1;
   intLastDay = 1;
-  for (String day : hmCongestion.keySet ()) {
-    for (SimplePointMarker marker : hmCongestion.get (day)) {
+  for (String day: hmCongestion.keySet()) {
+    for (SimplePointMarker marker: hmCongestion.get(day)){
       marker.setHidden(true);
       map.addMarkers(marker);
     }
   }
+  // Lines
+  for (String lineID: hmLines.keySet()) {
+    println (hmLines.get(lineID).size());
+    for (SimpleLinesMarker marker: hmLines.get(lineID)){
+      // marker.setHidden(true);
+      map.addMarkers(marker);
+    }
+  }
+
 }
 
 void initProvider() {
@@ -296,8 +300,8 @@ void initProvider() {
 
 void readLinesID(String file) {
   String [] geoCoords = loadStrings(file);
-  List<String> lineNum = new ArrayList<String>();
-  for (String line : geoCoords) {
+  lineNum = new ArrayList<String>();
+  for (String line: geoCoords) {
     lineNum.add(str(int(float(line.trim()))));
   }
   print (lineNum);
@@ -338,30 +342,29 @@ void readStops(String file) {
 }
 
 // Read lines from route file
-// void readLines(String file) {
-//   String[] geoLines = loadStrings(file);
-//   hmLines = new HashMap<String, ArrayList <SimpleLinesMarker>>();
-//   for (String lineID: lineNum) {
-//     ArrayList<SimpleLinesMarker> oneLine = new ArrayList<SimpleLinesMarker>();
-//     hmLines.put(lineID,oneLine);
-//   }
-//   Location sLoc, eLoc;
-//   SimpleLinesMarker splm;
-//   String lineID;
-//   for (String line: geoLines) {
-//     String[] geoLine = split(line.trim(),",");
-//     lineID = str(int(float(geoLine[0])));
-//     sLoc = new Location(float(geoLine[2]),float(geoLine[1]));
-//     eLoc = new Location(float(geoLine[4]),float(geoLine[3]));
-//     splm = new SimpleLinesMarker(sLoc,eLoc);
-//     splm.setColor(color(233, 57, 35));
-//     splm.setStrokeWeight(3);
-//     splm.setStrokeWeight(0);
-//     ArrayList <SimpleLinesMarker> tmp = hmLines.get(lineID);
-//     tmp.add(splm);
-//     hmLines.put(lineID,tmp);
-//   }
-// }
+void readLines(String file) {
+  String[] geoLines = loadStrings(file);
+  hmLines = new HashMap<String, ArrayList <SimpleLinesMarker>>();
+  for (int i=0; i<lineNum.size(); i++) {
+    ArrayList<SimpleLinesMarker> oneLine = new ArrayList<SimpleLinesMarker>();
+    hmLines.put(lineNum.get(i),oneLine);
+  };
+  Location sLoc, eLoc;
+  SimpleLinesMarker splm;
+  String lineID;
+  for (String line: geoLines) {
+    String[] geoLine = split(line.trim(),",");
+    lineID = str(int(float(geoLine[0])));
+    sLoc = new Location(float(geoLine[2]),float(geoLine[1]));
+    eLoc = new Location(float(geoLine[4]),float(geoLine[3]));
+    splm = new SimpleLinesMarker(sLoc,eLoc);
+    splm.setColor(color(233, 57, 35));
+    splm.setStrokeWeight(3);
+    ArrayList <SimpleLinesMarker> tmp = hmLines.get(lineID);
+    tmp.add(splm);
+    hmLines.put(lineID,tmp);
+  }
+}
 
 
 // Read congestion points from congestion file
@@ -377,7 +380,7 @@ void readCongestions(String file) {
   String day;
   SimplePointMarker spcm;
   float ratio=0.9;
-  for (String line : geoCoords) {
+  for (String line: geoCoords) {
     String[] geoCoord = split(line.trim(), ",");
     loc = new Location(float(geoCoord[1]), float(geoCoord[0]));
     level=int(geoCoord[2]);
