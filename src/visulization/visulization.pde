@@ -5,6 +5,7 @@
  * Unfolding Tutorial: http://unfoldingmaps.org/tutorials/getting-started-in-processing.html
  */
 
+import de.fhpotsdam.unfolding.ui.BarScaleUI;
 import de.fhpotsdam.unfolding.*;
 import de.fhpotsdam.unfolding.geo.*;
 import de.fhpotsdam.unfolding.utils.*;
@@ -28,6 +29,7 @@ int days;
 
 // Map container
 UnfoldingMap map;
+BarScaleUI barScale;
 
 // Map providers
 AbstractMapProvider provider1;
@@ -99,6 +101,7 @@ void draw() {
   map.setZoomRange(minZoomRange, maxZoomRange);
   map.setPanningRestriction(dublinLocation, maxPanningDistance);
   newLocation = map.getCenter();
+  barScale.draw();
 
   if (mouseX > 160 || mouseY < 30 || mouseY > 580) {
     fill(0);
@@ -109,12 +112,12 @@ void draw() {
     map.setPanningRestriction(newLocation, 0);
   }
 
-  // Congestion
-  show_congestion();
   // Lines
   show_lines();
   // Stops
   show_stops();
+  // Congestion
+  show_congestion();
 }
 
 
@@ -345,6 +348,7 @@ void mapSetting() {
   map.setZoomRange(minZoomRange, maxZoomRange); // prevent zooming too far out
   map.setPanningRestriction(dublinLocation, maxPanningDistance);
   MapUtils.createDefaultEventDispatcher(this, map);
+  barScale = new BarScaleUI(this, map, 950, 570);
 
   // Stops
   stopIndex = 1;
@@ -415,7 +419,9 @@ void readStops(String file) {
     String lineID = str(int(geoCoord[1]));
     loc = new Location(float(geoCoord[3]), float(geoCoord[2]));
     spm = new SimplePointMarker(loc);
-    spm.setStrokeWeight(2);
+    spm.setStrokeWeight(0);
+    spm.setColor(color(102, 102, 102, 150));
+    spm.setRadius(7);
     ArrayList<SimplePointMarker> tmp = hmStops.get(lineID);
     tmp.add(spm);
     hmStops.put(lineID, tmp);
@@ -439,8 +445,8 @@ void readLines(String file) {
     sLoc = new Location(float(geoLine[2]),float(geoLine[1]));
     eLoc = new Location(float(geoLine[4]),float(geoLine[3]));
     splm = new SimpleLinesMarker(sLoc,eLoc);
-    splm.setColor(color(108, 104, 248));
-    splm.setStrokeWeight(3);
+    splm.setColor(color(108, 104, 248, 180));
+    splm.setStrokeWeight(2);
     ArrayList <SimpleLinesMarker> tmp = hmLines.get(lineID);
     tmp.add(splm);
     hmLines.put(lineID,tmp);
@@ -460,7 +466,7 @@ void readCongestions(String file) {
   int level;
   String day;
   SimplePointMarker spcm;
-  float ratio=0.9;
+  float ratio=1.2;
   for (String line: geoCoords) {
     String[] geoCoord = split(line.trim(), ",");
     loc = new Location(float(geoCoord[1]), float(geoCoord[0]));
