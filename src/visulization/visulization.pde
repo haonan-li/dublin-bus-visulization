@@ -42,13 +42,13 @@ Location newLocation;
 int panelFontSize;
 color colorBg, bgColor, outTextColor, inTextColor;
 int bgHeight;
-String[] arr = {"1", "2", "3", "4", "5"};
 
 // Stops
 float isShowStops, isLastShowStops;
 HashMap<String, ArrayList <SimplePointMarker>> hmStops;
 
 // Lines
+int lineIndex, lineLastIndex;
 float isShowLines, isLastShowLines;
 HashMap<String, ArrayList <SimpleLinesMarker>> hmLines;
 
@@ -110,6 +110,8 @@ void draw() {
 
   // Congestion
   show_congestion();
+  // Lines
+  show_lines();
 }
 
 
@@ -145,9 +147,8 @@ void initCP5() {
     .setSize(130, 110)
     .setBarHeight(20)
     .setItemHeight(20)
-    // Need revise
-    //.addItems(lineNum.toArray(new String[lineNum.size()]))
-    .addItems(arr)
+    .addItem("All",0)
+    .addItems(lineNum)
     .setColorLabel(inTextColor)
     .moveTo(g1)
     ;
@@ -175,8 +176,8 @@ void initCP5() {
     .setSize(130, 110)
     .setBarHeight(20)
     .setItemHeight(20)
-    .addItems(arr)
-    //.addItems(lineNum.toArray(new String[lineNum.size()]))
+    .addItem("All",0)
+    .addItems(lineNum)
     .setColorLabel(inTextColor)
     .moveTo(g2)
     ;
@@ -225,8 +226,51 @@ void initCP5() {
 public void show_stops() {
 }
 
+public void show_lines() {
+  isShowLines = cp5.getController("show_routes").getValue();
+  if (isShowLines == 1.0) {
+    lineIndex = int(cp5.getController("show_route:").getValue())-1;
+    if (lineIndex == -1) {
+      // Show all lines
+      for (int i=0; i<lineNum.size(); i++){
+        for (SimpleLinesMarker marker : hmLines.get(lineNum.get(i))){
+          marker.setHidden(false);
+        }
+      }
+    } else {
+      if (lineLastIndex != -1) {
+        // Hide last shown 
+        for (SimpleLinesMarker marker : hmLines.get(lineNum.get(lineLastIndex))){
+          marker.setHidden(true);
+          }
+      } else {
+        // If last show is all, hidden all
+        for (int i=0; i<lineNum.size(); i++){
+          for (SimpleLinesMarker marker : hmLines.get(lineNum.get(i))){
+            marker.setHidden(true);
+          }
+        }
+      }
+      // Show current line
+      for (SimpleLinesMarker marker : hmLines.get(lineNum.get(lineIndex))){
+        marker.setHidden(false);
+        }
+      }
+      lineLastIndex = lineIndex;
+      isLastShowLines = isShowLines;
+    } else if (isLastShowLines == 1.0){
+      // Hide all 
+      for (int i=0; i<lineNum.size(); i++){
+        for (SimpleLinesMarker marker : hmLines.get(lineNum.get(i))){
+          marker.setHidden(true);
+        }
+      }
+      isLastShowLines = 0.0;
+  }
+}
+
 public void show_congestion() {
-  float isShowCongestion = cp5.getController("show_congestion").getValue();
+  isShowCongestion = cp5.getController("show_congestion").getValue();
   if (isShowCongestion == 1.0) {
     // First hide last show, then show current
     intDay = Math.round(cp5.getController("days").getValue());
@@ -281,10 +325,12 @@ void mapSetting() {
     }
   }
   // Lines
+  lineIndex = 1;
+  lineLastIndex = 1;
   for (String lineID: hmLines.keySet()) {
     println (hmLines.get(lineID).size());
     for (SimpleLinesMarker marker: hmLines.get(lineID)){
-      // marker.setHidden(true);
+      marker.setHidden(true);
       map.addMarkers(marker);
     }
   }

@@ -193,7 +193,7 @@ def point2line(df):
     ndf = df[0:ndim-1]
     ndf = ndf[['Line_ID','Lon','Lat','Lon2','Lat2']]
     # Drop too long links
-    ndf['keep'] = ndf.apply(lambda row: distance(row.Lon,row.Lat,row.Lon2,row.Lat2)<1e-5, axis=1)
+    ndf['keep'] = ndf.apply(lambda row: distance(row.Lon,row.Lat,row.Lon2,row.Lat2)<1e-4, axis=1)
     ndf = ndf[ndf.keep == True].drop('keep',axis=1)
 
     return ndf
