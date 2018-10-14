@@ -91,7 +91,6 @@ void draw() {
   }
   // Congestion
   show_congestion();
-  
 }
 
 
@@ -179,12 +178,10 @@ void initCP5() {
   accordion.open(0, 1, 2);
 
   accordion.setCollapseMode(Accordion.MULTI);
-
 }
 
 
 public void show_stops() {
-
 }
 
 public void show_congestion() {
@@ -192,10 +189,10 @@ public void show_congestion() {
   if (isShowCongestion == 1.0) {
     // First hide last show, then show current
     intDay = Math.round(cp5.getController("days").getValue());
-    for (SimplePointMarker marker: hmCongestion.get(str(intLastDay))){
+    for (SimplePointMarker marker : hmCongestion.get (str (intLastDay))) {
       marker.setHidden(true);
     }
-    for (SimplePointMarker marker: hmCongestion.get(str(intDay))){
+    for (SimplePointMarker marker : hmCongestion.get (str (intDay))) {
       marker.setHidden(false);
     }
     intLastDay = intDay;
@@ -218,10 +215,15 @@ void mapSetting() {
   map.setPanningRestriction(dublinLocation, 50);
   MapUtils.createDefaultEventDispatcher(this, map);
 
-  // // Stops
-  // for (SimplePointMarker marker : hmStops.values ()) {
-  //   map.addMarkers(marker);
-  // }
+  // Stops
+  for (String key : hmStops.keySet ()) {
+    ArrayList<SimplePointMarker> value = new ArrayList<SimplePointMarker>();
+    value = hmStops.get(key);
+    for (SimplePointMarker marker : value) {
+      map.addMarkers(marker);
+    }
+  }
+
 
   // // Lines
   // for (SimpleLinesMarker marker: lines) {
@@ -281,7 +283,7 @@ void readStops(String file) {
   for (String line : geoCoords) {
     String[] geoCoord = split(line.trim(), ",");
     //If line ID is same as the last one, save in a same ArrayList
-    if (geoCoord[1] == lastLine) {
+    if (geoCoord[1].equals(lastLine)) {
       loc = new Location(float(geoCoord[3]), float(geoCoord[2]));
       spm = new SimplePointMarker(loc);
       stops.add(spm);
@@ -348,15 +350,15 @@ void readCongestions(String file) {
     spcm.setColor(color(153, 0, 13));
     spcm.setRadius(sqrt(level/100)*10*ratio);
     tint(255, 127);
-    if(level<3000){
-    spcm.setColor(color(203,24,29));
-    spcm.setRadius(sqrt(level/100)*10*ratio);
+    if (level<3000) {
+      spcm.setColor(color(203, 24, 29));
+      spcm.setRadius(sqrt(level/100)*10*ratio);
     }
-    if(level<2000){
-    spcm.setColor(color(239,59,44));
+    if (level<2000) {
+      spcm.setColor(color(239, 59, 44));
     }
-    if(level<1000){
-    spcm.setColor(color(251,106,74));
+    if (level<1000) {
+      spcm.setColor(color(251, 106, 74));
     }
     //-----------------------------------------end---------
     ///////////////////////////////////////////////////////

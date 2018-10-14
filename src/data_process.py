@@ -17,7 +17,7 @@ def output(df,out_dir,out_file):
     if not os.path.isdir(data_dir + out_dir):
         os.mkdir(data_dir + out_dir)
     out_file = data_dir + out_dir + out_file
-    df.to_csv(out_file, index=False)
+    df.to_csv(out_file, index=False, header=False)
 
 # keep columns by column names
 def keep_cols(df,cols):
@@ -123,7 +123,7 @@ def extract_stops(files):
 # keep points far away each other
 def merge_near_pos(df, threshold):
     df['keep'] = 1
-    df = df.reset_index()
+    df = df.reset_index().drop(['index'],axis=1)
     ndim = df.shape[0]
     for i in range(0,ndim-1):
         for j in range(i+1,ndim):
@@ -146,7 +146,7 @@ def extract_routes(files):
             i += 1
             bar.update(i)
             df = pd.read_csv(raw_data_dir + data_file, header=None, names=header)
-            cols = ['Line_ID','Vehicle_ID','Lon','Lat']
+            cols = ['Line_ID','Vehicle_ID','Time_Frame','Lon','Lat']
             ndf = keep_cols(df,cols)
             nndf = ndf[~ndf.Line_ID.isnull()]
             ldf.append(nndf)
@@ -162,42 +162,41 @@ def extract_routes(files):
             bar.update(i)
             # Grab one line's data
             sndf = ndf[ndf['Line_ID'] == line]
-            # Group all data points and count the duplicated coordinate
-            cndf = sndf.groupby(ndf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
-            # Sort by count and keep top 500 stops
-            scndf = cndf.sort_values(by=['count'],ascending=False)[0:2000]
+            # Combine Vehicle_ID and Time_Frame to find a set of data with at least 20 points
+            sndf['uniqueID'] = sndf.apply(lambda row: row.Time_Frame+str(row.Vehicle_ID), axis=1)
+            uniqueIDSet = set(sndf.uniqueID.values)
+            for uniqueID in uniqueIDSet:
+                ssndf = sndf[sndf.uniqueID == uniqueID]
+                if ssndf.shape[0] > 20:
+                    break
+            scndf = ssndf.drop(['Vehicle_ID','Time_Frame','uniqueID'],axis=1)
+            # # Group all data points and count the duplicated coordinate
+            # cndf = sndf.groupby(ndf.columns.tolist()).size().reset_index().rename(columns={0:'count'})
+            # # Sort by count and keep top 500 stops
+            # scndf = cndf.sort_values(by=['count'],ascending=False)[0:2000]
             mscndf = merge_near_pos(scndf,1e-6)
-            rdf = point2line(mscndf)
-            ldf.append(rdf)
+            # Make sure at least 10 points
+            if (mscndf.shape[0] > 10):
+                rdf = point2line(mscndf)
+                ldf.append(rdf)
     odf = pd.concat(ldf)
     output(odf,'./','lines.csv')
 
+
 def point2line(df):
     df = df.reset_index()
+    df = df.drop(['keep','index'],axis=1)
     ndim = df.shape[0]
-    lineID = df.loc[1,'Line_ID']
-    lheader = ['line_ID','lon1','lat1','lon2','lat2']
-    ndf = pd.DataFrame(columns=lheader)
-    for i in range(0,ndim):
-        nearest = -1
-        nearest2 = -1
-        min_dis = 99999
-        min_dis2 = 99999
-        for j in range(0,ndim):
-            if (i != j):
-                dis = distance(df.loc[i,'Lon'],df.loc[i,'Lat'],df.loc[j,'Lon'],df.loc[j,'Lat'])
-                if (dis < min_dis2):
-                    min_dis2 = dis
-                    nearest2 = j
-                    if min_dis2 < min_dis:
-                        min_dis,min_dis2 = min_dis2,min_dis
-                        nearest,nearest2 = nearest2,nearest
-        s = pd.Series([lineID,df.loc[i,'Lon'],df.loc[i,'Lat'],df.loc[nearest,'Lon'],df.loc[nearest,'Lat']],index=lheader)
-        s2 = pd.Series([lineID,df.loc[i,'Lon'],df.loc[i,'Lat'],df.loc[nearest2,'Lon'],df.loc[nearest2,'Lat']],index=lheader)
-        ndf = ndf.append(s,ignore_index=True)
-        ndf = ndf.append(s2,ignore_index=True)
-    return ndf
+    for i in range(0,ndim-1):
+        df.loc[i,'Lat2'] = df.loc[i+1,'Lat']
+        df.loc[i,'Lon2'] = df.loc[i+1,'Lon']
+    ndf = df[0:ndim-1]
+    ndf = ndf[['Line_ID','Lon','Lat','Lon2','Lat2']]
+    # Drop too long links
+    ndf['keep'] = ndf.apply(lambda row: distance(row.Lon,row.Lat,row.Lon2,row.Lat2)<1e-5, axis=1)
+    ndf = ndf[ndf.keep == True].drop('keep',axis=1)
 
+    return ndf
 
 # Generate a json file contains all line_ids for all days
 def line_summary(files):
@@ -226,7 +225,7 @@ def main():
 
     # # Count everyday's bus lineID
     # print ('Begin line summary ... ')
-    line_summary(files)
+    # line_summary(files)
     # print ('Done !')
 
     # # Extract stops for each bus line
@@ -236,7 +235,7 @@ def main():
 
     # # Extract routes for each bus line
     # print ('Begin extract routes ... ')
-    # extract_routes(files)
+    extract_routes(files)
     # print ('Done !')
 
     # Congestion
