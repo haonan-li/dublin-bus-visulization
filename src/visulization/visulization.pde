@@ -60,10 +60,22 @@ int intDay, intLastDay;
 float isShowCongestion, isLastShowCongestion;
 HashMap<String, ArrayList <SimplePointMarker>> hmCongestion;
 
+// Population
+float isShowPopulation, isLastShowPopulation;
+float minPopulation, maxPopulation;
+HashMap<String, Float> hmPopulation;
+
+
+// District
+List<Feature> district;
+List<Marker> countyMarkers;
+
 // Data directory
 String stopFile = "../../data/stops.csv";
 String lineFile = "../../data/lines.csv";
 String lineIDFile = "../../data/lineID.csv";
+String districtFile = "../../data/district.geojson";
+String populationFile = "../../data/population.csv";
 String congestionFile = "../../data/congestion.csv";
 
 ArrayList<String> lineNum ;
@@ -81,9 +93,11 @@ void setup() {
   bgColor = 0x33A5DEE4;
   outTextColor = color(0);
   inTextColor = color(255);
-  bgHeight = 170;
+  bgHeight = 160;
 
   initProvider();
+  readShape(districtFile);
+  readPopulation(populationFile);
   readLinesID(lineIDFile);
   readStops(stopFile);
   readLines(lineFile);
@@ -118,6 +132,22 @@ void draw() {
   show_stops();
   // Congestion
   show_congestion();
+  // Population
+  show_population();
+}
+
+void readShape(String file) {
+  district = GeoJSONReader.loadData(this, file);
+  countyMarkers = MapUtils.createSimpleMarkers(district);
+}
+
+void readPopulation(String file) {
+  String [] geoCoords = loadStrings(file);
+  hmPopulation = new HashMap<String, Float>();
+  for (String line : geoCoords) {
+    String[] geoCoord = split(line.trim(), ",");
+    hmPopulation.put(geoCoord[0],float(geoCoord[1]));
+  }
 }
 
 
@@ -138,7 +168,7 @@ void initCP5() {
 
   Toggle t1 = cp5.addToggle("show_stops")
     .setValue(0)
-    .setPosition(10, 20)
+    .setPosition(10, 10)
     .setSize(20, 20)
     .setColorLabel(outTextColor)
     .moveTo(g1)
@@ -149,7 +179,7 @@ void initCP5() {
   l1.getStyle().marginTop = -20;
 
   cp5.addScrollableList("in_route:")
-    .setPosition(10, 50)
+    .setPosition(10, 40)
     .setSize(130, 110)
     .setBarHeight(20)
     .setItemHeight(20)
@@ -167,7 +197,7 @@ void initCP5() {
 
   Toggle t2 = cp5.addToggle("show_routes")
     .setValue(0)
-    .setPosition(10, 20)
+    .setPosition(10, 10)
     .setSize(20, 20)
     .setColorLabel(outTextColor)
     .moveTo(g2)
@@ -178,7 +208,7 @@ void initCP5() {
   l2.getStyle().marginTop = -20;
 
   cp5.addScrollableList("show_route:")
-    .setPosition(10, 50)
+    .setPosition(10, 40)
     .setSize(130, 110)
     .setBarHeight(20)
     .setItemHeight(20)
@@ -190,13 +220,13 @@ void initCP5() {
 
   Group g3 = cp5.addGroup("congestion")
     .setBackgroundColor(bgColor)
-    .setBackgroundHeight(60)
+    .setBackgroundHeight(40)
     .setBarHeight(20)
     ;
 
   Toggle t3 = cp5.addToggle("show_congestion")
     .setValue(0)
-    .setPosition(10, 20)
+    .setPosition(10, 10)
     .setSize(20, 20)
     .setColorLabel(outTextColor)
     .moveTo(g3)
@@ -208,7 +238,7 @@ void initCP5() {
 
   cp5.addSlider("days")
     .setValue(1)
-    .setPosition(10, 70)
+    .setPosition(10, 40)
     .setSize(95, 20)
     .setRange(1, 31)
     .setNumberOfTickMarks(31)
@@ -217,15 +247,34 @@ void initCP5() {
     .moveTo(g3)
     ;
 
+  Group g4 = cp5.addGroup("population")
+    .setBackgroundColor(bgColor)
+    .setBackgroundHeight(40)
+    .setBarHeight(20)
+    ;
+
+  Toggle t4 = cp5.addToggle("show_population")
+    .setValue(0)
+    .setPosition(10, 10)
+    .setSize(20, 20)
+    .setColorLabel(outTextColor)
+    .moveTo(g4)
+    ;
+
+  Label l4 = t4.getCaptionLabel();
+  l4.getStyle().marginLeft = 25;
+  l4.getStyle().marginTop = -20;
+
   accordion = cp5.addAccordion("acc")
     .setPosition(10, 30)
     .setWidth(150)
     .addItem(g1)
     .addItem(g2)
     .addItem(g3)
+    .addItem(g4)
     ;
 
-  accordion.open(0, 1, 2);
+  accordion.open(0, 1, 2, 3);
 
   accordion.setCollapseMode(Accordion.MULTI);  
 }
@@ -339,6 +388,21 @@ public void show_congestion() {
   }
 }
 
+public void show_population() {
+  isShowPopulation = cp5.getController("show_population").getValue();
+  if (isShowPopulation == 1.0) {
+    for (Marker marker : countyMarkers) {
+      marker.setHidden(false);
+    }
+    isLastShowPopulation = isShowPopulation;
+  } else if (isLastShowPopulation == 1.0){
+    for (Marker marker : countyMarkers) {
+      marker.setHidden(true);
+    }
+    isLastShowPopulation = 0.0;
+  }
+}
+
 // Set all map elements
 void mapSetting() {
   // Basic Setting
@@ -379,7 +443,23 @@ void mapSetting() {
       map.addMarkers(marker);
     }
   }
-
+  
+  // District
+  minPopulation = 0;
+  maxPopulation = 20000;
+  for (Marker marker : countyMarkers) {
+    String edName = marker.getProperty("EDNAME").toString();
+    float population = hmPopulation.get(edName);
+    colorMode(HSB);
+    float popuLevel = population/maxPopulation * 500 + 40;
+    marker.setColor(color(50, popuLevel, 999, 100));
+    colorMode(RGB);
+    marker.setHidden(true);
+    marker.setStrokeColor(color(120));
+    marker.setStrokeWeight(1);
+  }
+  
+  map.addMarkers(countyMarkers);
 }
 
 void initProvider() {
@@ -421,7 +501,7 @@ void readStops(String file) {
     spm = new SimplePointMarker(loc);
     spm.setStrokeWeight(0);
     spm.setColor(color(102, 102, 102, 150));
-    spm.setRadius(7);
+    spm.setRadius(4);
     ArrayList<SimplePointMarker> tmp = hmStops.get(lineID);
     tmp.add(spm);
     hmStops.put(lineID, tmp);
