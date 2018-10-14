@@ -18,7 +18,7 @@ import java.math.*;
 
 import controlP5.*;
 
-//Location dublinLocation = new Location(53.33f, -6.25f);
+
 Location dublinLocation = new Location(53.33f, -6.35f);
 
 // Control panel
@@ -36,6 +36,13 @@ AbstractMapProvider provider3;
 AbstractMapProvider provider4;
 
 int zoomLevel, prevZoomLevel, minZoomRange, maxZoomRange;
+float maxPanningDistance;
+Location newLocation;
+
+int panelFontSize;
+color colorBg, bgColor, outTextColor, inTextColor;
+int bgHeight;
+String[] arr = {"1", "2", "3", "4", "5"};
 
 // Stops
 float isShowStops, isLastShowStops;
@@ -64,6 +71,14 @@ void setup() {
 
   minZoomRange = 9;
   maxZoomRange = 17;
+  maxPanningDistance = 50;
+
+  panelFontSize = 10;
+  colorBg = #2E5C6E;
+  bgColor = 0x33A5DEE4;
+  outTextColor = color(0);
+  inTextColor = color(255);
+  bgHeight = 170;
 
   initProvider();
   readLinesID(lineIDFile);
@@ -82,6 +97,8 @@ void draw() {
   Location location = map.getLocation(mouseX, mouseY);
   zoomLevel = map.getZoomLevel();
   map.setZoomRange(minZoomRange, maxZoomRange);
+  map.setPanningRestriction(dublinLocation, maxPanningDistance);
+  newLocation = map.getCenter();
 
   if (mouseX > 160 || mouseY < 30 || mouseY > 580) {
     fill(0);
@@ -89,8 +106,13 @@ void draw() {
   }
   if (mouseX <= 160 && (mouseY >= 30 || mouseY <= 580)) {
     map.setZoomRange(zoomLevel, zoomLevel);
+    map.setPanningRestriction(newLocation, 0);
   }
-
+  
+//  fill(0);
+//  textSize(20);
+//  text("hello", 150, 200);
+  
   // Congestion
   show_congestion();
 }
@@ -99,88 +121,109 @@ void draw() {
 // Control panel
 void initCP5() {
   cp5 = new ControlP5(this);
-  ControlFont cf = new ControlFont(createFont("Arial", 9));
+  ControlFont cf = new ControlFont(createFont("Arial", panelFontSize));
   cp5.setFont(cf);
-
+  cp5.setColorBackground(colorBg);
+//  cp5.setColorForeground(0xff660000);
+  
   Group g1 = cp5.addGroup("stop")
-    .setBackgroundColor(color(200))
-      .setBackgroundHeight(190)
-        .setBarHeight(20)
-          ;
+    .setBackgroundColor(bgColor)
+    .setBackgroundHeight(bgHeight)
+    .setBarHeight(20)
+//    .setColor(color(255))
+    ;
 
-  cp5.addToggle("show_stops")
+  Toggle t1 = cp5.addToggle("show_stops")
     .setValue(0)
-      .setPosition(10, 20)
-        .setSize(20, 20)
-          .moveTo(g1)
-            ;
+    .setPosition(10, 20)
+    .setSize(20, 20)
+    .setColorLabel(outTextColor)
+    .moveTo(g1)
+    ;
 
-  cp5.addScrollableList("show_stops_in_route:")
-    .setPosition(10, 70)
-      .setSize(130, 110)
-        .setBarHeight(20)
-          .setItemHeight(20)
-            // Need revise
-            //.addItems(lineNum.toArray(new String[lineNum.size()]))
-            .setColorLabel(color(255))
-              .moveTo(g1)
-                ;
+  Label l1 = t1.getCaptionLabel();
+  l1.getStyle().marginLeft = 25;
+  l1.getStyle().marginTop = -20;
+
+  cp5.addScrollableList("in_route:")
+    .setPosition(10, 50)
+    .setSize(130, 110)
+    .setBarHeight(20)
+    .setItemHeight(20)
+    // Need revise
+    //.addItems(lineNum.toArray(new String[lineNum.size()]))
+    .addItems(arr)
+    .setColorLabel(inTextColor)
+    .moveTo(g1)
+    ;
 
   Group g2 = cp5.addGroup("route")
-    .setBackgroundColor(color(200))
-      .setBackgroundHeight(190)
-        .setBarHeight(20)
-          ;
+    .setBackgroundColor(bgColor)
+    .setBackgroundHeight(bgHeight)
+    .setBarHeight(20)
+    ;
 
-  cp5.addToggle("show_routes")
+  Toggle t2 = cp5.addToggle("show_routes")
     .setValue(0)
-      .setPosition(10, 20)
-        .setSize(20, 20)
-          .moveTo(g2)
-            ;
+    .setPosition(10, 20)
+    .setSize(20, 20)
+    .setColorLabel(outTextColor)
+    .moveTo(g2)
+    ;
+
+  Label l2 = t2.getCaptionLabel();
+  l2.getStyle().marginLeft = 25;
+  l2.getStyle().marginTop = -20;
 
   cp5.addScrollableList("show_route:")
-    .setPosition(10, 70)
-      .setSize(130, 110)
-        .setBarHeight(20)
-          .setItemHeight(20)
-            //.addItems(lineNum.toArray(new String[lineNum.size()]))
-            .setColorLabel(color(255))
-              .moveTo(g2)
-                ;
+    .setPosition(10, 50)
+    .setSize(130, 110)
+    .setBarHeight(20)
+    .setItemHeight(20)
+    .addItems(arr)
+    //.addItems(lineNum.toArray(new String[lineNum.size()]))
+    .setColorLabel(inTextColor)
+    .moveTo(g2)
+    ;
 
   Group g3 = cp5.addGroup("congestion")
-    .setBackgroundColor(color(200))
-      .setBackgroundHeight(60)
-        .setBarHeight(20)
-          ;
+    .setBackgroundColor(bgColor)
+    .setBackgroundHeight(60)
+    .setBarHeight(20)
+    ;
 
-  cp5.addToggle("show_congestion")
+  Toggle t3 = cp5.addToggle("show_congestion")
     .setValue(0)
-      .setPosition(10, 25)
-        .setSize(20, 20)
-          .moveTo(g3)
-            ;
+    .setPosition(10, 20)
+    .setSize(20, 20)
+    .setColorLabel(outTextColor)
+    .moveTo(g3)
+    ;
+
+  Label l3 = t3.getCaptionLabel();
+  l3.getStyle().marginLeft = 25;
+  l3.getStyle().marginTop = -20;
 
   cp5.addSlider("days")
     .setValue(0)
-      .setPosition(10, 70)
-        .setSize(95, 20)
-          .setRange(1, 31)
-            .moveTo(g3)
-              ;
+    .setPosition(10, 60)
+    .setSize(95, 20)
+    .setRange(1, 31)
+    .setColorLabel(outTextColor)
+    .moveTo(g3)
+    ;
 
   accordion = cp5.addAccordion("acc")
     .setPosition(10, 30)
-      .setWidth(150)
-        .addItem(g1)
-          .addItem(g2)
-            .addItem(g3)
-              ;
+    .setWidth(150)
+    .addItem(g1)
+    .addItem(g2)
+    .addItem(g3)
+    ;
 
   accordion.open(0, 1, 2);
 
-  accordion.setCollapseMode(Accordion.MULTI);
+  accordion.setCollapseMode(Accordion.MULTI);  
 }
 
 
@@ -215,7 +258,7 @@ void mapSetting() {
   map.zoomToLevel(11);
   map.panTo(dublinLocation);
   map.setZoomRange(minZoomRange, maxZoomRange); // prevent zooming too far out
-  map.setPanningRestriction(dublinLocation, 50);
+  map.setPanningRestriction(dublinLocation, maxPanningDistance);
   MapUtils.createDefaultEventDispatcher(this, map);
 
   // Stops
@@ -380,4 +423,3 @@ void keyPressed() {
   } else if (key =='4') {
   }
 }
-
