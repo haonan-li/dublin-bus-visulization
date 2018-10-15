@@ -1,5 +1,5 @@
 /**
- * Displays the subway lines of dublin.
+ *  Dublin bus line visualization
  *
  * For colleborators: see API at http://unfoldingmaps.org/javadoc/index.html
  * Unfolding Tutorial: http://unfoldingmaps.org/tutorials/getting-started-in-processing.html
@@ -19,17 +19,14 @@ import java.math.*;
 
 import controlP5.*;
 
-
+// --------------------------------- Varition -------------------------------- //
 Location dublinLocation = new Location(53.33f, -6.35f);
 
 // Control panel
 ControlP5 cp5;
 Accordion accordion;
 int days;
-
-// Map container
-UnfoldingMap map;
-BarScaleUI barScale;
+int panelFontSize;
 
 // Map providers
 AbstractMapProvider provider1;
@@ -37,13 +34,14 @@ AbstractMapProvider provider2;
 AbstractMapProvider provider3;
 AbstractMapProvider provider4;
 
+// Map setting
+UnfoldingMap map;
+BarScaleUI barScale;
 int zoomLevel, prevZoomLevel, minZoomRange, maxZoomRange;
 float maxPanningDistance;
 Location newLocation;
-
-int panelFontSize;
-color colorBg, bgColor, outTextColor, inTextColor;
 int bgHeight;
+color colorBg, bgColor, outTextColor, inTextColor;
 
 // Stops
 int stopIndex, stopLastIndex;
@@ -53,6 +51,7 @@ HashMap<String, ArrayList <SimplePointMarker>> hmStops;
 // Lines
 int lineIndex, lineLastIndex;
 float isShowLines, isLastShowLines;
+ArrayList<String> lineNum ;
 HashMap<String, ArrayList <SimpleLinesMarker>> hmLines;
 
 // Congestions
@@ -78,8 +77,8 @@ String districtFile = "../../data/district.geojson";
 String populationFile = "../../data/population.csv";
 String congestionFile = "../../data/congestion.csv";
 
-ArrayList<String> lineNum ;
 
+// --------------------------------- Setup -------------------------------- //
 void setup() {
   size(1000, 600, OPENGL);
   smooth();
@@ -108,6 +107,7 @@ void setup() {
 }
 
 
+// ---------------------------------- Drow --------------------------------- //
 void draw() {
   map.draw();
   Location location = map.getLocation(mouseX, mouseY);
@@ -134,42 +134,26 @@ void draw() {
   show_congestion();
   // Population
   show_population();
-
+  
+  // Show title
   textSize(20);
   fill(0);
   textAlign(CENTER);
-  text("Dublin bus visulization",500,25);
+  text("Dublin bus visualization",500,25);
   textSize(10);
 }
 
-void readShape(String file) {
-  district = GeoJSONReader.loadData(this, file);
-  countyMarkers = MapUtils.createSimpleMarkers(district);
-}
-
-void readPopulation(String file) {
-  String [] geoCoords = loadStrings(file);
-  hmPopulation = new HashMap<String, Float>();
-  for (String line : geoCoords) {
-    String[] geoCoord = split(line.trim(), ",");
-    hmPopulation.put(geoCoord[0],float(geoCoord[1]));
-  }
-}
-
-
-// Controlstopl
+// ------------------------------- Control panel --------------------------- //
 void initCP5() {
   cp5 = new ControlP5(this);
   ControlFont cf = new ControlFont(createFont("Arial", panelFontSize));
   cp5.setFont(cf);
   cp5.setColorBackground(colorBg);
-//  cp5.setColorForeground(0xff660000);
   
   Group g1 = cp5.addGroup("stop")
     .setBackgroundColor(bgColor)
     .setBackgroundHeight(bgHeight)
     .setBarHeight(20)
-//    .setColor(color(255))
     ;
 
   Toggle t1 = cp5.addToggle("show_stops")
@@ -284,7 +268,21 @@ void initCP5() {
   accordion.setCollapseMode(Accordion.MULTI);  
 }
 
+void keyPressed() {
+  // Number keys to change map provider
+  if (key == '1') {
+    map.mapDisplay.setProvider(provider1);
+  } else if (key == '2') {
+    map.mapDisplay.setProvider(provider2);
+  } else if (key =='3') {
+    map.mapDisplay.setProvider(provider3);
+  } else if (key =='4') {
+    map.mapDisplay.setProvider(provider4);
+  }
+}
 
+
+// ------------------------------- Show elements --------------------------- //
 public void show_stops() {
   isShowStops = cp5.getController("show_stops").getValue();
   if (isShowStops == 1.0) {
@@ -408,7 +406,7 @@ public void show_population() {
   }
 }
 
-// Set all map elements
+// ---------------------------- Init Map setting ------------------------- //
 void mapSetting() {
   // Basic Setting
   map = new UnfoldingMap(this, provider1);
@@ -433,7 +431,6 @@ void mapSetting() {
     marker.setStrokeColor(color(120));
     marker.setStrokeWeight(1);
   }
-  
 
   // Stops
   stopIndex = 1;
@@ -464,7 +461,7 @@ void mapSetting() {
       map.addMarkers(marker);
     }
   }
- map.addMarkers(countyMarkers);
+  map.addMarkers(countyMarkers);
 }
 
 void initProvider() {
@@ -474,6 +471,7 @@ void initProvider() {
   provider4 = new Microsoft.AerialProvider();
 }
 
+// ------------------------------- Read elements --------------------------- //
 void readLinesID(String file) {
   String [] geoCoords = loadStrings(file);
   lineNum = new ArrayList<String>();
@@ -484,6 +482,20 @@ void readLinesID(String file) {
   Collections.sort(tmp);
   for(int i=0; i<tmp.size(); i++) {
     lineNum.add(str(tmp.get(i)));
+  }
+}
+
+void readShape(String file) {
+  district = GeoJSONReader.loadData(this, file);
+  countyMarkers = MapUtils.createSimpleMarkers(district);
+}
+
+void readPopulation(String file) {
+  String [] geoCoords = loadStrings(file);
+  hmPopulation = new HashMap<String, Float>();
+  for (String line : geoCoords) {
+    String[] geoCoord = split(line.trim(), ",");
+    hmPopulation.put(geoCoord[0],float(geoCoord[1]));
   }
 }
 
@@ -538,7 +550,6 @@ void readLines(String file) {
   }
 }
 
-
 // Read congestion points from congestion file
 void readCongestions(String file) {
   String[] geoCoords = loadStrings(file);
@@ -570,16 +581,3 @@ void readCongestions(String file) {
   }
 }
 
-
-void keyPressed() {
-  // Number keys to change map provider
-  if (key == '1') {
-    map.mapDisplay.setProvider(provider1);
-  } else if (key == '2') {
-    map.mapDisplay.setProvider(provider2);
-  } else if (key =='3') {
-    map.mapDisplay.setProvider(provider3);
-  } else if (key =='4') {
-    map.mapDisplay.setProvider(provider4);
-  }
-}
