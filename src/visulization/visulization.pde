@@ -90,7 +90,7 @@ void setup() {
 
   panelFontSize = 10;
   colorBg = #2E5C6E;
-  bgColor = 0x33A5DEE4;
+  bgColor = 0x7fA5DEE4;
   outTextColor = color(0);
   inTextColor = color(255);
   bgHeight = 160;
@@ -134,6 +134,12 @@ void draw() {
   show_congestion();
   // Population
   show_population();
+
+  textSize(20);
+  fill(0);
+  textAlign(CENTER);
+  text("Dublin bus visulization",500,25);
+  textSize(10);
 }
 
 void readShape(String file) {
@@ -241,7 +247,6 @@ void initCP5() {
     .setPosition(10, 40)
     .setSize(95, 20)
     .setRange(1, 31)
-    .setNumberOfTickMarks(31)
     .setColorLabel(outTextColor)
     .setSliderMode(Slider.FLEXIBLE)
     .moveTo(g3)
@@ -413,6 +418,22 @@ void mapSetting() {
   map.setPanningRestriction(dublinLocation, maxPanningDistance);
   MapUtils.createDefaultEventDispatcher(this, map);
   barScale = new BarScaleUI(this, map, 950, 570);
+ 
+  // District
+  minPopulation = 0;
+  maxPopulation = 20000;
+  for (Marker marker : countyMarkers) {
+    String edName = marker.getProperty("EDNAME").toString();
+    float population = hmPopulation.get(edName);
+    colorMode(HSB);
+    float popuLevel = population/maxPopulation * 500 + 40;
+    marker.setColor(color(50, popuLevel, 999, 100));
+    colorMode(RGB);
+    marker.setHidden(true);
+    marker.setStrokeColor(color(120));
+    marker.setStrokeWeight(1);
+  }
+  
 
   // Stops
   stopIndex = 1;
@@ -443,23 +464,7 @@ void mapSetting() {
       map.addMarkers(marker);
     }
   }
-  
-  // District
-  minPopulation = 0;
-  maxPopulation = 20000;
-  for (Marker marker : countyMarkers) {
-    String edName = marker.getProperty("EDNAME").toString();
-    float population = hmPopulation.get(edName);
-    colorMode(HSB);
-    float popuLevel = population/maxPopulation * 500 + 40;
-    marker.setColor(color(50, popuLevel, 999, 100));
-    colorMode(RGB);
-    marker.setHidden(true);
-    marker.setStrokeColor(color(120));
-    marker.setStrokeWeight(1);
-  }
-  
-  map.addMarkers(countyMarkers);
+ map.addMarkers(countyMarkers);
 }
 
 void initProvider() {
@@ -500,8 +505,8 @@ void readStops(String file) {
     loc = new Location(float(geoCoord[3]), float(geoCoord[2]));
     spm = new SimplePointMarker(loc);
     spm.setStrokeWeight(0);
-    spm.setColor(color(102, 102, 102, 150));
-    spm.setRadius(4);
+    spm.setColor(color(255, 120, 0, 150));
+    spm.setRadius(5);
     ArrayList<SimplePointMarker> tmp = hmStops.get(lineID);
     tmp.add(spm);
     hmStops.put(lineID, tmp);
