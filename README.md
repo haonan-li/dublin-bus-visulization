@@ -1,6 +1,6 @@
 # dublin-bus-visualization
 
-Group project for GEOM90007\_2018\_SM2: Spatial Visualisation
+Group project for GEOM90007\_2018\_SM2: Spatial Visualization
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ Group project for GEOM90007\_2018\_SM2: Spatial Visualisation
 ## How to run
 
 ### 1. Process the raw data 
-**[Note: the outcome has been put in the ```data/``` dirctory], you don't need to do the following steps again.]**
+**[Note: the outcome has been put in the ```data/``` dirctory, you don't have to do the following steps again.]**
 
 
 1) Install Python packages: pandas, progressbar2

@@ -25,7 +25,7 @@ void mapSetting() {
     float population = hmPopulation.get(edName);
     colorMode(HSB);
     float popuLevel = population/maxPopulation * 500 + 40;
-    marker.setColor(color(50, popuLevel, 999, 100));
+    marker.setColor(color(225, popuLevel, 999, 100));
     colorMode(RGB);
     marker.setHidden(true);
     marker.setStrokeColor(color(120));
